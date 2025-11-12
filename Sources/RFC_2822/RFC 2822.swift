@@ -102,7 +102,7 @@ extension RFC_2822 {
     public struct Address: Hashable, Sendable {
         public enum Kind: Hashable, Sendable {
             case mailbox(Mailbox)
-            case group(String, [Mailbox]) // Display name and members
+            case group(String, [Mailbox])  // Display name and members
         }
 
         public let kind: Kind
@@ -167,14 +167,14 @@ extension RFC_2822 {
                         isEscaped = true
                     } else {
                         // qtext = NO-WS-CTL / %d33-33 / %d35-91 / %d93-126
-                        let isValidQText = char.isASCII && (
-                            (char.asciiValue! >= 1 && char.asciiValue! <= 8) ||
-                            (char.asciiValue! == 11 || char.asciiValue! == 12) ||
-                            (char.asciiValue! >= 14 && char.asciiValue! <= 31) ||
-                            char.asciiValue! == 33 ||
-                            (char.asciiValue! >= 35 && char.asciiValue! <= 91) ||
-                            (char.asciiValue! >= 93 && char.asciiValue! <= 126)
-                        )
+                        let isValidQText =
+                            char.isASCII
+                            && ((char.asciiValue! >= 1 && char.asciiValue! <= 8)
+                                || (char.asciiValue! == 11 || char.asciiValue! == 12)
+                                || (char.asciiValue! >= 14 && char.asciiValue! <= 31)
+                                || char.asciiValue! == 33
+                                || (char.asciiValue! >= 35 && char.asciiValue! <= 91)
+                                || (char.asciiValue! >= 93 && char.asciiValue! <= 126))
                         guard isValidQText else { return false }
                     }
                 }
@@ -193,8 +193,7 @@ extension RFC_2822 {
                 return atoms.allSatisfy { atom in
                     atom.allSatisfy { char in
                         // atext = ALPHA / DIGIT / "!" / "#" / "$" / "%" / "&" / "'" / "*" / "+" / "-" / "/" / "=" / "?" / "^" / "_" / "`" / "{" / "|" / "}" / "~"
-                        char.isLetter || char.isNumber ||
-                        "!#$%&'*+-/=?^_`{|}~".contains(char)
+                        char.isLetter || char.isNumber || "!#$%&'*+-/=?^_`{|}~".contains(char)
                     }
                 }
             }
@@ -220,13 +219,13 @@ extension RFC_2822 {
                         isEscaped = true
                     } else {
                         // dtext = NO-WS-CTL / %d33-90 / %d94-126
-                        let isValidDText = char.isASCII && (
-                            (char.asciiValue! >= 1 && char.asciiValue! <= 8) ||
-                            (char.asciiValue! == 11 || char.asciiValue! == 12) ||
-                            (char.asciiValue! >= 14 && char.asciiValue! <= 31) ||
-                            (char.asciiValue! >= 33 && char.asciiValue! <= 90) ||
-                            (char.asciiValue! >= 94 && char.asciiValue! <= 126)
-                        )
+                        let isValidDText =
+                            char.isASCII
+                            && ((char.asciiValue! >= 1 && char.asciiValue! <= 8)
+                                || (char.asciiValue! == 11 || char.asciiValue! == 12)
+                                || (char.asciiValue! >= 14 && char.asciiValue! <= 31)
+                                || (char.asciiValue! >= 33 && char.asciiValue! <= 90)
+                                || (char.asciiValue! >= 94 && char.asciiValue! <= 126))
                         guard isValidDText else { return false }
                     }
                 }

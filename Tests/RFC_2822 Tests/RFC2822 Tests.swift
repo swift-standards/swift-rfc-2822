@@ -6,8 +6,9 @@
 //
 
 import Foundation
-@testable import RFC_2822
 import Testing
+
+@testable import RFC_2822
 
 @Suite("RFC2822 Date Formatter Tests")
 struct RFC2822DateFormatterTests {
@@ -40,7 +41,7 @@ struct RFC2822DateFormatterTests {
 
     @Test("Formats and parses correctly using FormatStyle.rfc2822")
     func testFormatStyleRFC2822() {
-        let date = Date(timeIntervalSince1970: 0) // Jan 1, 1970, 00:00:00 UTC
+        let date = Date(timeIntervalSince1970: 0)  // Jan 1, 1970, 00:00:00 UTC
         let formatter = Date.FormatStyle.rfc2822
         let expectedString = "Thu, 01 Jan 1970 00:00:00 +0000"
 

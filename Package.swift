@@ -22,7 +22,7 @@ let package = Package(
     ],
     dependencies: [
         // Add RFC dependencies here as needed
-        // .package(url: "https://github.com/swift-web-standards/swift-rfc-1123.git", branch: "main"),
+        // .package(url: "https://github.com/swift-standards/swift-rfc-1123.git", branch: "main"),
     ],
     targets: [
         .target(

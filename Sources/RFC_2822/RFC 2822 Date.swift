@@ -10,7 +10,7 @@ import Foundation
 public enum RFC_2822 {}
 
 extension RFC_2822 {
-     public enum Date {}
+    public enum Date {}
 }
 
 @available(macOS 12.0, *)
