@@ -26,7 +26,7 @@ struct RFC2822DateFormatterTests {
         let dateString = "Thu, 01 Jan 1970 00:00:00 +0000"
         let expected = Date(timeIntervalSince1970: 0)
 
-        let parsedDate = try? #require(RFC_2822.Date.date(from: dateString))
+        let parsedDate = RFC_2822.Date.date(from: dateString)
 
         #expect(parsedDate == expected, "Parsed date does not match the expected date.")
     }
