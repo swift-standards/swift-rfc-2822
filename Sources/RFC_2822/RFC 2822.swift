@@ -20,6 +20,79 @@ extension RFC_2822 {
     }
 }
 
+// MARK: - Message Nested Types
+
+extension RFC_2822.Message {
+    /// Message identifier as defined in RFC 2822 3.6.4
+    public struct ID: Hashable, Sendable, Codable, CustomStringConvertible {
+        public let idLeft: String
+        public let idRight: String
+
+        public init(idLeft: String, idRight: String) {
+            self.idLeft = idLeft
+            self.idRight = idRight
+        }
+
+        public var description: String {
+            "<\(idLeft)@\(idRight)>"
+        }
+    }
+
+    /// Return path for trace fields
+    public struct Path: Hashable, Sendable, Codable {
+        public let addrSpec: RFC_2822.AddrSpec?
+
+        public init(addrSpec: RFC_2822.AddrSpec? = nil) {
+            self.addrSpec = addrSpec
+        }
+    }
+
+    /// Received trace field
+    public struct Received: Hashable, Sendable, Codable {
+        public struct NameValuePair: Hashable, Sendable, Codable {
+            public let name: String
+            public let value: String
+        }
+
+        public let tokens: [NameValuePair]
+        public let date: Foundation.Date
+
+        public init(tokens: [NameValuePair], date: Foundation.Date) {
+            self.tokens = tokens
+            self.date = date
+        }
+    }
+
+    /// Block of resent fields
+    public struct ResentBlock: Hashable, Sendable, Codable {
+        public let date: Foundation.Date
+        public let from: [RFC_2822.Mailbox]
+        public let sender: RFC_2822.Mailbox?
+        public let to: [RFC_2822.Address]?
+        public let cc: [RFC_2822.Address]?
+        public let bcc: [RFC_2822.Address]?
+        public let messageID: ID?
+
+        public init(
+            date: Foundation.Date,
+            from: [RFC_2822.Mailbox],
+            sender: RFC_2822.Mailbox? = nil,
+            to: [RFC_2822.Address]? = nil,
+            cc: [RFC_2822.Address]? = nil,
+            bcc: [RFC_2822.Address]? = nil,
+            messageID: ID? = nil
+        ) {
+            self.date = date
+            self.from = from
+            self.sender = sender
+            self.to = to
+            self.cc = cc
+            self.bcc = bcc
+            self.messageID = messageID
+        }
+    }
+}
+
 extension RFC_2822 {
     /// Message fields as defined in RFC 2822 Section 3.6
     public struct Fields: Hashable, Sendable, Codable {
@@ -37,9 +110,9 @@ extension RFC_2822 {
         public let bcc: [Address]?
 
         // Optional identification fields
-        public let messageID: MessageID?
-        public let inReplyTo: [MessageID]?
-        public let references: [MessageID]?
+        public let messageID: Message.ID?
+        public let inReplyTo: [Message.ID]?
+        public let references: [Message.ID]?
 
         // Optional informational fields
         public let subject: String?
@@ -47,11 +120,11 @@ extension RFC_2822 {
         public let keywords: [String]?
 
         // Trace fields (optional but important)
-        public let receivedFields: [Received]
-        public let returnPath: Path?
+        public let receivedFields: [Message.Received]
+        public let returnPath: Message.Path?
 
         // Resent fields (optional block)
-        public let resentFields: [ResentBlock]
+        public let resentFields: [Message.ResentBlock]
 
         public init(
             originationDate: Foundation.Date,
@@ -61,15 +134,15 @@ extension RFC_2822 {
             to: [Address]? = nil,
             cc: [Address]? = nil,
             bcc: [Address]? = nil,
-            messageID: MessageID? = nil,
-            inReplyTo: [MessageID]? = nil,
-            references: [MessageID]? = nil,
+            messageID: Message.ID? = nil,
+            inReplyTo: [Message.ID]? = nil,
+            references: [Message.ID]? = nil,
             subject: String? = nil,
             comments: String? = nil,
             keywords: [String]? = nil,
-            receivedFields: [Received] = [],
-            returnPath: Path? = nil,
-            resentFields: [ResentBlock] = []
+            receivedFields: [Message.Received] = [],
+            returnPath: Message.Path? = nil,
+            resentFields: [Message.ResentBlock] = []
         ) {
             self.originationDate = originationDate
             self.from = from
@@ -260,83 +333,6 @@ extension RFC_2822 {
                     }
                 }
             }
-        }
-    }
-}
-
-extension RFC_2822 {
-    /// Message identifier as defined in RFC 2822 3.6.4
-    public struct MessageID: Hashable, Sendable, Codable {
-        public let idLeft: String
-        public let idRight: String
-
-        public init(idLeft: String, idRight: String) {
-            self.idLeft = idLeft
-            self.idRight = idRight
-        }
-
-        public var stringValue: String {
-            "<\(idLeft)@\(idRight)>"
-        }
-    }
-}
-
-extension RFC_2822 {
-    /// Return path for trace fields
-    public struct Path: Hashable, Sendable, Codable {
-        public let addrSpec: AddrSpec?
-
-        public init(addrSpec: AddrSpec? = nil) {
-            self.addrSpec = addrSpec
-        }
-    }
-}
-
-extension RFC_2822 {
-    /// Received trace field
-    public struct Received: Hashable, Sendable, Codable {
-        public struct NameValuePair: Hashable, Sendable, Codable {
-            public let name: String
-            public let value: String
-        }
-
-        public let tokens: [NameValuePair]
-        public let date: Foundation.Date
-
-        public init(tokens: [NameValuePair], date: Foundation.Date) {
-            self.tokens = tokens
-            self.date = date
-        }
-    }
-}
-
-extension RFC_2822 {
-    /// Block of resent fields
-    public struct ResentBlock: Hashable, Sendable, Codable {
-        public let date: Foundation.Date
-        public let from: [Mailbox]
-        public let sender: Mailbox?
-        public let to: [Address]?
-        public let cc: [Address]?
-        public let bcc: [Address]?
-        public let messageID: MessageID?
-
-        public init(
-            date: Foundation.Date,
-            from: [Mailbox],
-            sender: Mailbox? = nil,
-            to: [Address]? = nil,
-            cc: [Address]? = nil,
-            bcc: [Address]? = nil,
-            messageID: MessageID? = nil
-        ) {
-            self.date = date
-            self.from = from
-            self.sender = sender
-            self.to = to
-            self.cc = cc
-            self.bcc = bcc
-            self.messageID = messageID
         }
     }
 }
