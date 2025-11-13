@@ -9,7 +9,7 @@ import Foundation
 
 extension RFC_2822 {
     /// RFC 2822 compliant message
-    public struct Message: Hashable, Sendable {
+    public struct Message: Hashable, Sendable, Codable {
         public let fields: Fields
         public let body: String?
 
@@ -22,7 +22,7 @@ extension RFC_2822 {
 
 extension RFC_2822 {
     /// Message fields as defined in RFC 2822 Section 3.6
-    public struct Fields: Hashable, Sendable {
+    public struct Fields: Hashable, Sendable, Codable {
         // Required fields
         public let originationDate: Foundation.Date
         public let from: [Mailbox]
@@ -99,8 +99,8 @@ extension RFC_2822 {
 
 extension RFC_2822 {
     /// Represents an email address as defined in RFC 2822 Section 3.4
-    public struct Address: Hashable, Sendable {
-        public enum Kind: Hashable, Sendable {
+    public struct Address: Hashable, Sendable, Codable {
+        public enum Kind: Hashable, Sendable, Codable {
             case mailbox(Mailbox)
             case group(String, [Mailbox])  // Display name and members
         }
@@ -115,7 +115,7 @@ extension RFC_2822 {
 
 extension RFC_2822 {
     /// Represents a mailbox address (name-addr or addr-spec)
-    public struct Mailbox: Hashable, Sendable {
+    public struct Mailbox: Hashable, Sendable, Codable {
         public let displayName: String?
         public let emailAddress: AddrSpec
 
@@ -128,7 +128,7 @@ extension RFC_2822 {
 
 extension RFC_2822 {
     /// Represents an addr-spec (local-part@domain)
-    public struct AddrSpec: Hashable, Sendable {
+    public struct AddrSpec: Hashable, Sendable, Codable {
         public let localPart: String
         public let domain: String
 
@@ -266,7 +266,7 @@ extension RFC_2822 {
 
 extension RFC_2822 {
     /// Message identifier as defined in RFC 2822 3.6.4
-    public struct MessageID: Hashable, Sendable {
+    public struct MessageID: Hashable, Sendable, Codable {
         public let idLeft: String
         public let idRight: String
 
@@ -283,7 +283,7 @@ extension RFC_2822 {
 
 extension RFC_2822 {
     /// Return path for trace fields
-    public struct Path: Hashable, Sendable {
+    public struct Path: Hashable, Sendable, Codable {
         public let addrSpec: AddrSpec?
 
         public init(addrSpec: AddrSpec? = nil) {
@@ -294,8 +294,8 @@ extension RFC_2822 {
 
 extension RFC_2822 {
     /// Received trace field
-    public struct Received: Hashable, Sendable {
-        public struct NameValuePair: Hashable, Sendable {
+    public struct Received: Hashable, Sendable, Codable {
+        public struct NameValuePair: Hashable, Sendable, Codable {
             public let name: String
             public let value: String
         }
@@ -312,7 +312,7 @@ extension RFC_2822 {
 
 extension RFC_2822 {
     /// Block of resent fields
-    public struct ResentBlock: Hashable, Sendable {
+    public struct ResentBlock: Hashable, Sendable, Codable {
         public let date: Foundation.Date
         public let from: [Mailbox]
         public let sender: Mailbox?
