@@ -37,7 +37,7 @@ Then add it to your target:
 .target(
     name: "YourTarget",
     dependencies: [
-        .product(name: "RFC_2822", package: "swift-rfc-2822")
+        .product(name: "RFC 2822", package: "swift-rfc-2822")
     ]
 )
 ```
