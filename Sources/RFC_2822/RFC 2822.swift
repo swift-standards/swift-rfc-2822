@@ -5,7 +5,9 @@
 //  Created by Coen ten Thije Boonkkamp on 02/02/2025.
 //
 
-import Foundation
+import INCITS_4_1986
+
+public enum RFC_2822 {}
 
 extension RFC_2822 {
     /// RFC 2822 compliant message
@@ -55,17 +57,17 @@ extension RFC_2822.Message {
         }
 
         public let tokens: [NameValuePair]
-        public let date: Foundation.Date
+        public let timestamp: RFC_2822.Timestamp
 
-        public init(tokens: [NameValuePair], date: Foundation.Date) {
+        public init(tokens: [NameValuePair], timestamp: RFC_2822.Timestamp) {
             self.tokens = tokens
-            self.date = date
+            self.timestamp = timestamp
         }
     }
 
     /// Block of resent fields
     public struct ResentBlock: Hashable, Sendable, Codable {
-        public let date: Foundation.Date
+        public let timestamp: RFC_2822.Timestamp
         public let from: [RFC_2822.Mailbox]
         public let sender: RFC_2822.Mailbox?
         public let to: [RFC_2822.Address]?
@@ -74,7 +76,7 @@ extension RFC_2822.Message {
         public let messageID: ID?
 
         public init(
-            date: Foundation.Date,
+            timestamp: RFC_2822.Timestamp,
             from: [RFC_2822.Mailbox],
             sender: RFC_2822.Mailbox? = nil,
             to: [RFC_2822.Address]? = nil,
@@ -82,7 +84,7 @@ extension RFC_2822.Message {
             bcc: [RFC_2822.Address]? = nil,
             messageID: ID? = nil
         ) {
-            self.date = date
+            self.timestamp = timestamp
             self.from = from
             self.sender = sender
             self.to = to
@@ -97,7 +99,7 @@ extension RFC_2822 {
     /// Message fields as defined in RFC 2822 Section 3.6
     public struct Fields: Hashable, Sendable, Codable {
         // Required fields
-        public let originationDate: Foundation.Date
+        public let originationDate: RFC_2822.Timestamp
         public let from: [Mailbox]
 
         // Optional originator fields
@@ -127,7 +129,7 @@ extension RFC_2822 {
         public let resentFields: [Message.ResentBlock]
 
         public init(
-            originationDate: Foundation.Date,
+            originationDate: RFC_2822.Timestamp,
             from: [Mailbox],
             sender: Mailbox? = nil,
             replyTo: [Address]? = nil,
@@ -266,7 +268,7 @@ extension RFC_2822 {
                 return atoms.allSatisfy { atom in
                     atom.allSatisfy { char in
                         // atext = ALPHA / DIGIT / "!" / "#" / "$" / "%" / "&" / "'" / "*" / "+" / "-" / "/" / "=" / "?" / "^" / "_" / "`" / "{" / "|" / "}" / "~"
-                        char.isLetter || char.isNumber || "!#$%&'*+-/=?^_`{|}~".contains(char)
+                        char.isASCIILetter || char.isASCIIDigit || "!#$%&'*+-/=?^_`{|}~".contains(char)
                     }
                 }
             }
@@ -324,11 +326,11 @@ extension RFC_2822 {
                         // - End with letter or digit
                         // - Interior chars can be letter, digit, or hyphen
                         if atom.first == char {
-                            return char.isLetter
+                            return char.isASCIILetter
                         } else if atom.last == char {
-                            return char.isLetter || char.isNumber
+                            return char.isASCIILetter || char.isASCIIDigit
                         } else {
-                            return char.isLetter || char.isNumber || char == "-"
+                            return char.isASCIILetter || char.isASCIIDigit || char == "-"
                         }
                     }
                 }
@@ -371,7 +373,7 @@ extension RFC_2822.Fields: CustomStringConvertible {
 
         // Add resent blocks
         resentFields.forEach { block in
-            fields.append("Resent-Date: \(block.date)")
+            fields.append("Resent-Date: \(block.timestamp.secondsSinceEpoch)")
             fields.append("Resent-From: \(block.from.map(\.description).joined(separator: ", "))")
             if let sender = block.sender {
                 fields.append("Resent-Sender: \(sender)")
@@ -380,7 +382,7 @@ extension RFC_2822.Fields: CustomStringConvertible {
         }
 
         // Add required fields
-        fields.append("Date: \(RFC_2822.Date.formatter.string(from: originationDate))")
+        fields.append("Date: \(originationDate.secondsSinceEpoch)")
         fields.append("From: \(from.map(\.description).joined(separator: ", "))")
 
         // Add optional fields...
@@ -397,7 +399,7 @@ extension RFC_2822.Mailbox: CustomStringConvertible {
     public var description: String {
         if let name = displayName {
             // Quote display name if it contains special characters
-            let needsQuoting = name.contains(where: { !$0.isLetter && !$0.isNumber })
+            let needsQuoting = name.contains(where: { !$0.isASCIILetter && !$0.isASCIIDigit })
             let formattedName = needsQuoting ? "\"\(name)\"" : name
             return "\(formattedName) <\(emailAddress)>"
         }

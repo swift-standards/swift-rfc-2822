@@ -5,50 +5,38 @@
 //  Created by Coen ten Thije Boonkkamp on 26/12/2024.
 //
 
-import Foundation
 import Testing
 
 @testable import RFC_2822
 
-@Suite("RFC2822 Date Formatter Tests")
-struct RFC2822DateFormatterTests {
+@Suite("RFC2822 Timestamp Tests")
+struct RFC2822TimestampTests {
 
-    @Test("Formats a Date to RFC2822 String")
-    func testDateFormatting() {
-        let date = Date(timeIntervalSince1970: 0)
-        let expected = "Thu, 01 Jan 1970 00:00:00 +0000"
+    @Test("Timestamp creation")
+    func testTimestampCreation() {
+        let timestamp = RFC_2822.Timestamp(secondsSinceEpoch: 0.0)
 
-        #expect(RFC_2822.Date.string(from: date) == expected)
+        #expect(timestamp.secondsSinceEpoch == 0.0)
     }
 
-    @Test("Parses a valid RFC2822 string to Date")
-    func testDateParsingValidString() {
-        let dateString = "Thu, 01 Jan 1970 00:00:00 +0000"
-        let expected = Date(timeIntervalSince1970: 0)
+    @Test("Timestamp equality")
+    func testTimestampEquality() {
+        let timestamp1 = RFC_2822.Timestamp(secondsSinceEpoch: 1000.0)
+        let timestamp2 = RFC_2822.Timestamp(secondsSinceEpoch: 1000.0)
+        let timestamp3 = RFC_2822.Timestamp(secondsSinceEpoch: 2000.0)
 
-        let parsedDate = RFC_2822.Date.date(from: dateString)
-
-        #expect(parsedDate == expected, "Parsed date does not match the expected date.")
+        #expect(timestamp1 == timestamp2)
+        #expect(timestamp1 != timestamp3)
     }
 
-    @Test("Returns nil for an invalid RFC2822 string")
-    func testDateParsingInvalidString() {
-        let invalidDateString = "Invalid Date String"
+    @Test("Timestamp hashable")
+    func testTimestampHashable() {
+        var set: Set<RFC_2822.Timestamp> = []
 
-        let parsedDate = RFC_2822.Date.date(from: invalidDateString)
-        #expect(parsedDate == nil)
-    }
+        set.insert(RFC_2822.Timestamp(secondsSinceEpoch: 1000.0))
+        set.insert(RFC_2822.Timestamp(secondsSinceEpoch: 1000.0)) // Duplicate
+        set.insert(RFC_2822.Timestamp(secondsSinceEpoch: 2000.0))
 
-    @Test("Formats and parses correctly using FormatStyle.rfc2822")
-    func testFormatStyleRFC2822() {
-        let date = Date(timeIntervalSince1970: 0)  // Jan 1, 1970, 00:00:00 UTC
-        let formatter = Date.FormatStyle.rfc2822
-        let expectedString = "Thu, 01 Jan 1970 00:00:00 +0000"
-
-        let formattedString = formatter.format(date)
-        #expect(formattedString == expectedString)
-
-        let parsedDate = RFC_2822.Date.date(from: formattedString)
-        #expect(parsedDate == date)
+        #expect(set.count == 2)
     }
 }

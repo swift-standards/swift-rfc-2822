@@ -47,7 +47,6 @@ Then add it to your target:
 ### Formatting Dates
 
 ```swift
-import Foundation
 import RFC_2822
 
 let date = Date(timeIntervalSince1970: 0)

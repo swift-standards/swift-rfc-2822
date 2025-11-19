@@ -1,32 +1,23 @@
-# Swift Package Manager
-.build/
-.swiftpm/
-Package.resolved
-
-# Xcode
-*.xcodeproj/
-*.xcworkspace/
-xcuserdata/
-DerivedData/
-*.hmap
-*.ipa
-*.dSYM.zip
-*.dSYM
-
-# macOS
-.DS_Store
-
-# AI tools
-CLAUDE.md
-.claude
-.cursor/
-.aider*
-
-# IDE
-.vscode/
-.idea/
-
-# Temporary files
-*.tmp
-*.swp
 *~
+
+Package.resolved
+DerivedData/
+Thumbs.db
+
+# Dot files/directories (opt-in only)
+/.*
+!/.github
+!/.gitignore
+!/.spi.yml
+!/.swift-format
+!/.swiftformat
+!/.swiftlint.yml
+
+# Documentation (opt-in for top-level .md files only)
+/*.md
+!README.md
+!LICENSE.md
+!CHANGELOG.md
+!CONTRIBUTING.md
+!CODE_OF_CONDUCT.md
+!SECURITY.md
