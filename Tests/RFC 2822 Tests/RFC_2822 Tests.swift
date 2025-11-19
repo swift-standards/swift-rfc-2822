@@ -9,18 +9,18 @@ import Testing
 
 @testable import RFC_2822
 
-@Suite("RFC2822 Timestamp Tests")
-struct RFC2822TimestampTests {
+@Suite
+struct `RFC2822 Timestamp Tests` {
 
-    @Test("Timestamp creation")
-    func testTimestampCreation() {
+    @Test
+    func `Timestamp creation`() {
         let timestamp = RFC_2822.Timestamp(secondsSinceEpoch: 0.0)
 
         #expect(timestamp.secondsSinceEpoch == 0.0)
     }
 
-    @Test("Timestamp equality")
-    func testTimestampEquality() {
+    @Test
+    func `Timestamp equality`() {
         let timestamp1 = RFC_2822.Timestamp(secondsSinceEpoch: 1000.0)
         let timestamp2 = RFC_2822.Timestamp(secondsSinceEpoch: 1000.0)
         let timestamp3 = RFC_2822.Timestamp(secondsSinceEpoch: 2000.0)
@@ -29,8 +29,8 @@ struct RFC2822TimestampTests {
         #expect(timestamp1 != timestamp3)
     }
 
-    @Test("Timestamp hashable")
-    func testTimestampHashable() {
+    @Test
+    func `Timestamp hashable`() {
         var set: Set<RFC_2822.Timestamp> = []
 
         set.insert(RFC_2822.Timestamp(secondsSinceEpoch: 1000.0))
