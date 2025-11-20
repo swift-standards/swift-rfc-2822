@@ -207,14 +207,14 @@ extension RFC_2822 {
         public let localPart: String
         public let domain: String
 
-        public init(localPart: String, domain: String) throws {
+        public init(localPart: String, domain: String) throws(Error) {
             // Validate local-part and domain according to RFC 2822 3.4.1
             guard Self.validateLocalPart(localPart) else {
-                throw ValidationError.invalidLocalPart(localPart)
+                throw Error.invalidLocalPart(localPart)
             }
 
             guard Self.validateDomain(domain) else {
-                throw ValidationError.invalidDomain(domain)
+                throw Error.invalidDomain(domain)
             }
 
             self.localPart = localPart
@@ -339,15 +339,6 @@ extension RFC_2822 {
     }
 }
 
-extension RFC_2822 {
-    public enum ValidationError: Error {
-        case invalidLocalPart(String)
-        case invalidDomain(String)
-        case missingRequiredField(String)
-        case invalidFieldValue(String, String)
-    }
-
-}
 
 // MARK: - CustomStringConvertible Conformance
 
