@@ -24,12 +24,6 @@ extension RFC_2822 {
 
 extension RFC_2822.Mailbox: CustomStringConvertible {
     public var description: String {
-        if let name = displayName {
-            // Quote display name if it contains special characters
-            let needsQuoting = name.contains(where: { !$0.isASCIILetter && !$0.isASCIIDigit })
-            let formattedName = needsQuoting ? "\"\(name)\"" : name
-            return "\(formattedName) <\(emailAddress)>"
-        }
-        return emailAddress.description
+        String(self)
     }
 }

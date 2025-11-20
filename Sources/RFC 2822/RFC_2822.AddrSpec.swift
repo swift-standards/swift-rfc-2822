@@ -149,6 +149,6 @@ extension RFC_2822 {
 
 extension RFC_2822.AddrSpec: CustomStringConvertible {
     public var description: String {
-        "\(localPart)@\(domain)"
+        String(self)
     }
 }

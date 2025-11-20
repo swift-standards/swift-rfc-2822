@@ -39,8 +39,8 @@ extension RFC_2822.Message {
     /// - Binary content (via MIME transfer encodings)
     public struct Body: Hashable, Sendable {
         /// Canonical byte storage
-        private let bytes: [UInt8]
-
+        let bytes: [UInt8]
+        
         /// Initialize from byte array
         ///
         /// This is the canonical initializer that directly accepts bytes.
@@ -49,69 +49,24 @@ extension RFC_2822.Message {
         public init(_ bytes: [UInt8]) {
             self.bytes = bytes
         }
-
-        /// Initialize from string
-        ///
-        /// Convenience initializer that converts string to UTF-8 bytes.
-        ///
-        /// - Parameter string: The message body as string
-        public init(_ string: String) {
-            self.bytes = Array(string.utf8)
-        }
-
-        /// The raw bytes
-        public var rawBytes: [UInt8] {
-            bytes
-        }
     }
 }
 
-// MARK: - Serialization
-
-extension [UInt8] {
-    /// Creates byte representation of RFC 2822 message body
+extension RFC_2822.Message.Body {
+    
+    /// Initialize from string
     ///
-    /// This is the identity transformation - the body is already stored as bytes.
+    /// Convenience initializer that converts string to UTF-8 bytes.
     ///
-    /// ## Category Theory
-    ///
-    /// This is the canonical serialization (natural transformation):
-    /// ```
-    /// Body → [UInt8] (identity)
-    /// ```
-    ///
-    /// - Parameter body: The message body
-    public init(rfc2822Body body: RFC_2822.Message.Body) {
-        self = body.rawBytes
+    /// - Parameter string: The message body as string
+    public init(_ string: String) {
+        self.bytes = Array(string.utf8)
     }
 }
-
-extension String {
-    /// Creates string representation of RFC 2822 message body
-    ///
-    /// This composes through the canonical byte representation:
-    /// ```
-    /// Body → [UInt8] (canonical) → String (UTF-8 decode)
-    /// ```
-    ///
-    /// ## Category Theory
-    ///
-    /// This is functor composition - String is derived from the more
-    /// universal `[UInt8]` representation. UTF-8 decoding is always safe
-    /// (invalid sequences are replaced with U+FFFD).
-    ///
-    /// - Parameter body: The message body
-    public init(rfc2822Body body: RFC_2822.Message.Body) {
-        // Compose through canonical byte representation
-        self.init(decoding: [UInt8](rfc2822Body: body), as: UTF8.self)
-    }
-}
-
-// MARK: - Protocol Conformances
 
 extension RFC_2822.Message.Body: CustomStringConvertible {
     public var description: String {
-        String(rfc2822Body: self)
+        String(self)
     }
 }
 
@@ -119,7 +74,7 @@ extension RFC_2822.Message.Body: Codable {
     public func encode(to encoder: any Encoder) throws {
         var container = encoder.singleValueContainer()
         // Encode as string for JSON compatibility
-        try container.encode(String(rfc2822Body: self))
+        try container.encode(String(self))
     }
 
     public init(from decoder: any Decoder) throws {

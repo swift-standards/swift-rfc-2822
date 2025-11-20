@@ -86,34 +86,6 @@ extension RFC_2822 {
 
 extension RFC_2822.Fields: CustomStringConvertible {
     public var description: String {
-        var fields: [String] = []
-
-        // Add fields in recommended order
-        receivedFields.forEach { fields.append("Received: \($0)") }
-        if let returnPath = returnPath {
-            fields.append("Return-Path: \(returnPath)")
-        }
-
-        // Add resent blocks
-        resentFields.forEach { block in
-            fields.append("Resent-Date: \(block.timestamp.secondsSinceEpoch)")
-            fields.append("Resent-From: \(block.from.map(\.description).joined(separator: ", "))")
-            if let sender = block.sender {
-                fields.append("Resent-Sender: \(sender)")
-            }
-            // Add other resent fields...
-        }
-
-        // Add required fields
-        fields.append("Date: \(originationDate.secondsSinceEpoch)")
-        fields.append("From: \(from.map(\.description).joined(separator: ", "))")
-
-        // Add optional fields...
-        if let sender = sender {
-            fields.append("Sender: \(sender)")
-        }
-
-        // Join with CRLF
-        return fields.joined(separator: "\r\n")
+        String(self)
     }
 }

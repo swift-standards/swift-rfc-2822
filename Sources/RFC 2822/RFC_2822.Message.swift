@@ -45,7 +45,7 @@ extension RFC_2822.Message {
         }
 
         public var description: String {
-            "<\(idLeft)@\(idRight)>"
+            String(self)
         }
     }
 
@@ -108,10 +108,6 @@ extension RFC_2822.Message {
 
 extension RFC_2822.Message: CustomStringConvertible {
     public var description: String {
-        var result = fields.description
-        if let body = body {
-            result += "\r\n\r\n" + String(rfc2822Body: body)
-        }
-        return result
+        String(self)
     }
 }

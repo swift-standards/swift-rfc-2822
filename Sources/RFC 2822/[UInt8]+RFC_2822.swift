@@ -73,7 +73,7 @@ extension [UInt8] {
                 self.append(contentsOf: displayName.utf8)
             }
 
-            self.append(UInt8(ascii: " "))
+            self.append(UInt8.space)
             self.append(UInt8(ascii: "<"))
             self.append(contentsOf: [UInt8](mailbox.emailAddress))
             self.append(UInt8(ascii: ">"))
@@ -100,14 +100,14 @@ extension [UInt8] {
         case .group(let displayName, let mailboxes):
             // Group format: "Display Name: mailbox1, mailbox2;"
             self.append(contentsOf: displayName.utf8)
-            self.append(UInt8(ascii: ":"))
+            self.append(.colon)
 
             for (index, mailbox) in mailboxes.enumerated() {
                 if index > 0 {
                     self.append(UInt8(ascii: ","))
-                    self.append(UInt8(ascii: " "))
+                    self.append(UInt8.space)
                 } else {
-                    self.append(UInt8(ascii: " "))
+                    self.append(UInt8.space)
                 }
                 self.append(contentsOf: [UInt8](mailbox))
             }
@@ -125,17 +125,17 @@ extension [UInt8] {
     /// Serializes all message header fields per RFC 2822 Section 3.6.
     ///
     /// - Parameter fields: The message fields to serialize
-    public init(rfc2822Fields fields: RFC_2822.Fields) {
+    public init(_ fields: RFC_2822.Fields) {
         self = []
 
         // Helper to add a field line
         func addField(_ name: String, _ value: String) {
             self.append(contentsOf: name.utf8)
-            self.append(UInt8(ascii: ":"))
-            self.append(UInt8(ascii: " "))
+            self.append(.colon)
+            self.append(.space)
             self.append(contentsOf: value.utf8)
-            self.append(UInt8(ascii: "\r"))
-            self.append(UInt8(ascii: "\n"))
+            self.append(.cr)
+            self.append(.lf)
         }
 
         // Add fields in recommended order per RFC 2822
@@ -239,11 +239,11 @@ extension [UInt8] {
     /// ```
     ///
     /// - Parameter message: The RFC 2822 message to serialize
-    public init(rfc2822Message message: RFC_2822.Message) {
+    public init(_ message: RFC_2822.Message) {
         self = []
 
         // Serialize fields
-        self.append(contentsOf: [UInt8](rfc2822Fields: message.fields))
+        self.append(contentsOf: [UInt8](message.fields))
 
         // Add body if present
         if let body = message.body {
@@ -254,7 +254,123 @@ extension [UInt8] {
             self.append(UInt8(ascii: "\n"))
 
             // Body bytes
-            self.append(contentsOf: [UInt8](rfc2822Body: body))
+            self.append(contentsOf: [UInt8](body))
         }
+    }
+}
+
+extension [UInt8] {
+    /// Creates byte representation of RFC 2822 message body
+    ///
+    /// This is the identity transformation - the body is already stored as bytes.
+    ///
+    /// ## Category Theory
+    ///
+    /// This is the canonical serialization (natural transformation):
+    /// ```
+    /// Body → [UInt8] (identity)
+    /// ```
+    ///
+    /// - Parameter body: The message body
+    public init(_ body: RFC_2822.Message.Body) {
+        self = body.bytes
+    }
+}
+
+// MARK: - Timestamp Serialization
+
+extension [UInt8] {
+    /// Creates byte representation of RFC 2822 Timestamp
+    ///
+    /// Serializes as seconds since epoch in decimal ASCII.
+    /// Full RFC 2822 date-time formatting would require Date/Calendar APIs.
+    ///
+    /// - Parameter timestamp: The timestamp to serialize
+    public init(_ timestamp: RFC_2822.Timestamp) {
+        self = []
+        self.append(contentsOf: "\(timestamp.secondsSinceEpoch)".utf8)
+    }
+}
+
+// MARK: - Message.ID Serialization
+
+extension [UInt8] {
+    /// Creates byte representation of RFC 2822 Message ID
+    ///
+    /// Formats as `<idLeft@idRight>` per RFC 2822 Section 3.6.4.
+    ///
+    /// - Parameter messageID: The message ID to serialize
+    public init(_ messageID: RFC_2822.Message.ID) {
+        self = []
+        self.reserveCapacity(messageID.idLeft.count + messageID.idRight.count + 3)
+
+        self.append(UInt8(ascii: "<"))
+        self.append(contentsOf: messageID.idLeft.utf8)
+        self.append(UInt8(ascii: "@"))
+        self.append(contentsOf: messageID.idRight.utf8)
+        self.append(UInt8(ascii: ">"))
+    }
+}
+
+// MARK: - Message.Path Serialization
+
+extension [UInt8] {
+    /// Creates byte representation of RFC 2822 Return Path
+    ///
+    /// Formats as `<addr-spec>` or `<>` if empty.
+    ///
+    /// - Parameter path: The return path to serialize
+    public init(_ path: RFC_2822.Message.Path) {
+        self = []
+
+        self.append(UInt8(ascii: "<"))
+        if let addrSpec = path.addrSpec {
+            self.append(contentsOf: [UInt8](addrSpec))
+        }
+        self.append(UInt8(ascii: ">"))
+    }
+}
+
+// MARK: - Message.Received.NameValuePair Serialization
+
+extension [UInt8] {
+    /// Creates byte representation of Received field name-value pair
+    ///
+    /// Formats as "name value".
+    ///
+    /// - Parameter pair: The name-value pair to serialize
+    public init(_ pair: RFC_2822.Message.Received.NameValuePair) {
+        self = []
+        self.reserveCapacity(pair.name.count + 1 + pair.value.count)
+
+        self.append(contentsOf: pair.name.utf8)
+        self.append(UInt8(ascii: " "))
+        self.append(contentsOf: pair.value.utf8)
+    }
+}
+
+// MARK: - Message.Received Serialization
+
+extension [UInt8] {
+    /// Creates byte representation of RFC 2822 Received field
+    ///
+    /// Formats as trace tokens followed by semicolon and timestamp.
+    ///
+    /// - Parameter received: The received field to serialize
+    public init(_ received: RFC_2822.Message.Received) {
+        self = []
+
+        // Add name-value pairs
+        for (index, token) in received.tokens.enumerated() {
+            if index > 0 {
+                self.append(UInt8(ascii: " "))
+            }
+            self.append(contentsOf: [UInt8](token))
+        }
+
+        // Add semicolon and timestamp
+        self.append(UInt8(ascii: ";"))
+        self.append(UInt8(ascii: " "))
+        self.append(contentsOf: [UInt8](received.timestamp))
     }
 }
