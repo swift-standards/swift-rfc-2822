@@ -1,9 +1,15 @@
+// ===----------------------------------------------------------------------===//
 //
-//  RFC_2822.Message.Body.swift
-//  swift-rfc-2822
+// This source file is part of the swift-rfc-2822 open source project
 //
-//  RFC 2822 message body with canonical byte storage
+// Copyright (c) 2025 Coen ten Thije Boonkkamp
+// Licensed under Apache License v2.0
 //
+// See LICENSE.txt for license information
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+// ===----------------------------------------------------------------------===//
 
 import INCITS_4_1986
 
@@ -19,13 +25,6 @@ extension RFC_2822.Message {
     /// Body → [UInt8] (bytes) → String (UTF-8 interpretation)
     /// ```
     ///
-    /// ## Category Theory
-    ///
-    /// This follows the natural transformation pattern:
-    /// - **Domain**: Message body content
-    /// - **Codomain**: `[UInt8]` (canonical byte representation)
-    /// - **Composition**: String is derived through UTF-8 decoding
-    ///
     /// ## RFC 2822 Notes
     ///
     /// RFC 2822 Section 2.3 defines the body as:
@@ -39,28 +38,64 @@ extension RFC_2822.Message {
     /// - Binary content (via MIME transfer encodings)
     public struct Body: Hashable, Sendable {
         /// Canonical byte storage
-        let bytes: [UInt8]
-        
+        public let bytes: [UInt8]
+
+        /// Creates a body WITHOUT validation
+        init(__unchecked: Void, bytes: [UInt8]) {
+            self.bytes = bytes
+        }
+
         /// Initialize from byte array
         ///
         /// This is the canonical initializer that directly accepts bytes.
         ///
         /// - Parameter bytes: The message body as bytes
         public init(_ bytes: [UInt8]) {
-            self.bytes = bytes
+            self.init(__unchecked: (), bytes: bytes)
         }
     }
 }
 
+// MARK: - UInt8.ASCII.Serializable
+
+extension RFC_2822.Message.Body: UInt8.ASCII.Serializable {
+    public static let serialize: @Sendable (Self) -> [UInt8] = [UInt8].init
+
+    /// Error type (body parsing never fails)
+    public enum Error: Swift.Error, Sendable, Equatable, CustomStringConvertible {
+        case never
+
+        public var description: String {
+            "Body parsing never fails"
+        }
+    }
+
+    /// Parses a message body from ASCII bytes (AUTHORITATIVE IMPLEMENTATION)
+    ///
+    /// RFC 2822 body is simply a sequence of bytes. No validation is performed
+    /// beyond accepting the raw bytes.
+    ///
+    /// - Parameter bytes: The body content as bytes
+    public init<Bytes: Collection>(ascii bytes: Bytes, in context: Void = ()) throws(Error)
+    where Bytes.Element == UInt8 {
+        self.init(__unchecked: (), bytes: Array(bytes))
+    }
+}
+
+// MARK: - Protocol Conformances
+
+extension RFC_2822.Message.Body: UInt8.ASCII.RawRepresentable {
+    public typealias RawValue = String
+}
+
 extension RFC_2822.Message.Body {
-    
     /// Initialize from string
     ///
     /// Convenience initializer that converts string to UTF-8 bytes.
     ///
     /// - Parameter string: The message body as string
     public init(_ string: String) {
-        self.bytes = Array(string.utf8)
+        self.init(__unchecked: (), bytes: Array(string.utf8))
     }
 }
 

@@ -63,7 +63,7 @@ extension [UInt8] {
 
         if let displayName = mailbox.displayName {
             // Check if display name needs quoting
-            let needsQuoting = displayName.contains(where: { !$0.isASCIILetter && !$0.isASCIIDigit })
+            let needsQuoting = displayName.contains(where: { !$0.ascii.isLetter && !$0.ascii.isDigit })
 
             if needsQuoting {
                 self.append(UInt8(ascii: "\""))
@@ -73,7 +73,7 @@ extension [UInt8] {
                 self.append(contentsOf: displayName.utf8)
             }
 
-            self.append(UInt8.space)
+            self.append(.ascii.space)
             self.append(UInt8(ascii: "<"))
             self.append(contentsOf: [UInt8](mailbox.emailAddress))
             self.append(UInt8(ascii: ">"))
@@ -100,19 +100,19 @@ extension [UInt8] {
         case .group(let displayName, let mailboxes):
             // Group format: "Display Name: mailbox1, mailbox2;"
             self.append(contentsOf: displayName.utf8)
-            self.append(.colon)
+            self.append(.ascii.colon)
 
             for (index, mailbox) in mailboxes.enumerated() {
                 if index > 0 {
-                    self.append(UInt8(ascii: ","))
-                    self.append(UInt8.space)
+                    self.append(.ascii.comma)
+                    self.append(.ascii.space)
                 } else {
-                    self.append(UInt8.space)
+                    self.append(.ascii.space)
                 }
                 self.append(contentsOf: [UInt8](mailbox))
             }
 
-            self.append(UInt8(ascii: ";"))
+            self.append(.ascii.semicolon)
         }
     }
 }
@@ -131,11 +131,11 @@ extension [UInt8] {
         // Helper to add a field line
         func addField(_ name: String, _ value: String) {
             self.append(contentsOf: name.utf8)
-            self.append(.colon)
-            self.append(.space)
+            self.append(.ascii.colon)
+            self.append(.ascii.space)
             self.append(contentsOf: value.utf8)
-            self.append(.cr)
-            self.append(.lf)
+            self.append(.ascii.cr)
+            self.append(.ascii.lf)
         }
 
         // Add fields in recommended order per RFC 2822
