@@ -100,8 +100,8 @@ extension RFC_2822.Address: UInt8.ASCII.Serializable {
 
         // Check if this is a group (contains : but not within angle brackets)
         var inAngleBracket = false
-        var colonIndex: Int? = nil
-        var semicolonIndex: Int? = nil
+        var colonIndex: Int?
+        var semicolonIndex: Int?
 
         for (index, byte) in byteArray.enumerated() {
             if byte == UInt8.ascii.lessThanSign {
@@ -124,21 +124,23 @@ extension RFC_2822.Address: UInt8.ASCII.Serializable {
 
             // Extract display name (everything before :) and trim whitespace
             var displayNameBytes = Array(byteArray[..<colonIdx])
-            while !displayNameBytes.isEmpty &&
-                  (displayNameBytes.first == .ascii.space || displayNameBytes.first == .ascii.htab) {
+            while !displayNameBytes.isEmpty
+                && (displayNameBytes.first == .ascii.space || displayNameBytes.first == .ascii.htab) {
                 displayNameBytes.removeFirst()
             }
-            while !displayNameBytes.isEmpty &&
-                  (displayNameBytes.last == .ascii.space || displayNameBytes.last == .ascii.htab) {
+            while !displayNameBytes.isEmpty
+                && (displayNameBytes.last == .ascii.space || displayNameBytes.last == .ascii.htab) {
                 displayNameBytes.removeLast()
             }
 
             var displayName: String
             // Remove quotes if present
-            if !displayNameBytes.isEmpty &&
-               displayNameBytes.first == .ascii.quotationMark &&
-               displayNameBytes.last == .ascii.quotationMark {
-                displayName = String(decoding: displayNameBytes[1..<(displayNameBytes.count - 1)], as: UTF8.self)
+            if !displayNameBytes.isEmpty && displayNameBytes.first == .ascii.quotationMark
+                && displayNameBytes.last == .ascii.quotationMark {
+                displayName = String(
+                    decoding: displayNameBytes[1..<(displayNameBytes.count - 1)],
+                    as: UTF8.self
+                )
             } else {
                 displayName = String(decoding: displayNameBytes, as: UTF8.self)
             }
@@ -169,10 +171,12 @@ extension RFC_2822.Address: UInt8.ASCII.Serializable {
                     } else if byte == UInt8.ascii.comma && !inQuote && !inBracket {
                         // End of this mailbox - trim whitespace
                         var trimmed = currentMailbox
-                        while !trimmed.isEmpty && (trimmed.first == .ascii.space || trimmed.first == .ascii.htab) {
+                        while !trimmed.isEmpty
+                            && (trimmed.first == .ascii.space || trimmed.first == .ascii.htab) {
                             trimmed.removeFirst()
                         }
-                        while !trimmed.isEmpty && (trimmed.last == .ascii.space || trimmed.last == .ascii.htab) {
+                        while !trimmed.isEmpty
+                            && (trimmed.last == .ascii.space || trimmed.last == .ascii.htab) {
                             trimmed.removeLast()
                         }
                         if !trimmed.isEmpty {
@@ -191,10 +195,12 @@ extension RFC_2822.Address: UInt8.ASCII.Serializable {
 
                 // Don't forget the last mailbox - trim whitespace
                 var trimmed = currentMailbox
-                while !trimmed.isEmpty && (trimmed.first == .ascii.space || trimmed.first == .ascii.htab) {
+                while !trimmed.isEmpty
+                    && (trimmed.first == .ascii.space || trimmed.first == .ascii.htab) {
                     trimmed.removeFirst()
                 }
-                while !trimmed.isEmpty && (trimmed.last == .ascii.space || trimmed.last == .ascii.htab) {
+                while !trimmed.isEmpty
+                    && (trimmed.last == .ascii.space || trimmed.last == .ascii.htab) {
                     trimmed.removeLast()
                 }
                 if !trimmed.isEmpty {

@@ -77,17 +77,20 @@ extension RFC_2822.Message.Path: UInt8.ASCII.Serializable {
         var byteArray = Array(bytes)
 
         // Strip leading/trailing whitespace (CFWS)
-        while !byteArray.isEmpty && (byteArray.first == .ascii.space || byteArray.first == .ascii.htab) {
+        while !byteArray.isEmpty
+            && (byteArray.first == .ascii.space || byteArray.first == .ascii.htab) {
             byteArray.removeFirst()
         }
-        while !byteArray.isEmpty && (byteArray.last == .ascii.space || byteArray.last == .ascii.htab) {
+        while !byteArray.isEmpty
+            && (byteArray.last == .ascii.space || byteArray.last == .ascii.htab) {
             byteArray.removeLast()
         }
 
         guard !byteArray.isEmpty else { throw Error.empty }
 
         // Must be enclosed in angle brackets
-        guard byteArray.first == .ascii.lessThanSign && byteArray.last == .ascii.greaterThanSign else {
+        guard byteArray.first == .ascii.lessThanSign && byteArray.last == .ascii.greaterThanSign
+        else {
             throw Error.missingAngleBrackets(String(decoding: bytes, as: UTF8.self))
         }
 

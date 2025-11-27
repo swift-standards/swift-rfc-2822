@@ -84,17 +84,20 @@ extension RFC_2822.Message.ID: UInt8.ASCII.Serializable {
         var byteArray = Array(bytes)
 
         // Strip leading/trailing whitespace (CFWS)
-        while !byteArray.isEmpty && (byteArray.first == .ascii.space || byteArray.first == .ascii.htab) {
+        while !byteArray.isEmpty
+            && (byteArray.first == .ascii.space || byteArray.first == .ascii.htab) {
             byteArray.removeFirst()
         }
-        while !byteArray.isEmpty && (byteArray.last == .ascii.space || byteArray.last == .ascii.htab) {
+        while !byteArray.isEmpty
+            && (byteArray.last == .ascii.space || byteArray.last == .ascii.htab) {
             byteArray.removeLast()
         }
 
         guard !byteArray.isEmpty else { throw Error.empty }
 
         // Must be enclosed in angle brackets
-        guard byteArray.first == .ascii.lessThanSign && byteArray.last == .ascii.greaterThanSign else {
+        guard byteArray.first == .ascii.lessThanSign && byteArray.last == .ascii.greaterThanSign
+        else {
             throw Error.missingAngleBrackets(String(decoding: bytes, as: UTF8.self))
         }
 
@@ -130,9 +133,9 @@ extension RFC_2822.Message.ID: UInt8.ASCII.Serializable {
                     isEscaped = true
                 } else {
                     // qtext: printable ASCII except \ and "
-                    let isValidQText = (byte >= 32 && byte <= 126) &&
-                        byte != .ascii.reverseSolidus &&
-                        byte != .ascii.quotationMark
+                    let isValidQText =
+                        (byte >= 32 && byte <= 126) && byte != .ascii.reverseSolidus
+                        && byte != .ascii.quotationMark
                     guard isValidQText else {
                         throw Error.invalidIdLeft(String(decoding: idLeftBytes, as: UTF8.self))
                     }
@@ -157,26 +160,26 @@ extension RFC_2822.Message.ID: UInt8.ASCII.Serializable {
                 if byte == UInt8.ascii.period { continue }
 
                 // atext per RFC 2822
-                let isAtext = byte.ascii.isLetter || byte.ascii.isDigit ||
-                    byte == 0x21 ||                             // ! exclamationMark
-                    byte == UInt8.ascii.numberSign ||           // #
-                    byte == UInt8.ascii.dollarSign ||           // $
-                    byte == UInt8.ascii.percentSign ||          // %
-                    byte == UInt8.ascii.ampersand ||            // &
-                    byte == UInt8.ascii.apostrophe ||           // '
-                    byte == UInt8.ascii.asterisk ||             // *
-                    byte == UInt8.ascii.plusSign ||             // +
-                    byte == UInt8.ascii.hyphen ||               // -
-                    byte == UInt8.ascii.solidus ||              // /
-                    byte == UInt8.ascii.equalsSign ||           // =
-                    byte == UInt8.ascii.questionMark ||         // ?
-                    byte == UInt8.ascii.circumflexAccent ||     // ^
-                    byte == 0x5F ||                             // _ lowLine
-                    byte == 0x60 ||                             // ` graveAccent
-                    byte == 0x7B ||                             // { leftCurlyBracket
-                    byte == UInt8.ascii.verticalLine ||         // |
-                    byte == 0x7D ||                             // } rightCurlyBracket
-                    byte == 0x7E                                // ~ tilde
+                let isAtext =
+                    byte.ascii.isLetter || byte.ascii.isDigit || byte == 0x21  // ! exclamationMark
+                    || byte == UInt8.ascii.numberSign  // #
+                    || byte == UInt8.ascii.dollarSign  // $
+                    || byte == UInt8.ascii.percentSign  // %
+                    || byte == UInt8.ascii.ampersand  // &
+                    || byte == UInt8.ascii.apostrophe  // '
+                    || byte == UInt8.ascii.asterisk  // *
+                    || byte == UInt8.ascii.plusSign  // +
+                    || byte == UInt8.ascii.hyphen  // -
+                    || byte == UInt8.ascii.solidus  // /
+                    || byte == UInt8.ascii.equalsSign  // =
+                    || byte == UInt8.ascii.questionMark  // ?
+                    || byte == UInt8.ascii.circumflexAccent  // ^
+                    || byte == 0x5F  // _ lowLine
+                    || byte == 0x60  // ` graveAccent
+                    || byte == 0x7B  // { leftCurlyBracket
+                    || byte == UInt8.ascii.verticalLine  // |
+                    || byte == 0x7D  // } rightCurlyBracket
+                    || byte == 0x7E  // ~ tilde
 
                 guard isAtext else {
                     throw Error.invalidIdLeft(String(decoding: idLeftBytes, as: UTF8.self))
@@ -220,26 +223,26 @@ extension RFC_2822.Message.ID: UInt8.ASCII.Serializable {
                 if byte == UInt8.ascii.period { continue }
 
                 // atext per RFC 2822
-                let isAtext = byte.ascii.isLetter || byte.ascii.isDigit ||
-                    byte == 0x21 ||                             // ! exclamationMark
-                    byte == UInt8.ascii.numberSign ||           // #
-                    byte == UInt8.ascii.dollarSign ||           // $
-                    byte == UInt8.ascii.percentSign ||          // %
-                    byte == UInt8.ascii.ampersand ||            // &
-                    byte == UInt8.ascii.apostrophe ||           // '
-                    byte == UInt8.ascii.asterisk ||             // *
-                    byte == UInt8.ascii.plusSign ||             // +
-                    byte == UInt8.ascii.hyphen ||               // -
-                    byte == UInt8.ascii.solidus ||              // /
-                    byte == UInt8.ascii.equalsSign ||           // =
-                    byte == UInt8.ascii.questionMark ||         // ?
-                    byte == UInt8.ascii.circumflexAccent ||     // ^
-                    byte == 0x5F ||                             // _ lowLine
-                    byte == 0x60 ||                             // ` graveAccent
-                    byte == 0x7B ||                             // { leftCurlyBracket
-                    byte == UInt8.ascii.verticalLine ||         // |
-                    byte == 0x7D ||                             // } rightCurlyBracket
-                    byte == 0x7E                                // ~ tilde
+                let isAtext =
+                    byte.ascii.isLetter || byte.ascii.isDigit || byte == 0x21  // ! exclamationMark
+                    || byte == UInt8.ascii.numberSign  // #
+                    || byte == UInt8.ascii.dollarSign  // $
+                    || byte == UInt8.ascii.percentSign  // %
+                    || byte == UInt8.ascii.ampersand  // &
+                    || byte == UInt8.ascii.apostrophe  // '
+                    || byte == UInt8.ascii.asterisk  // *
+                    || byte == UInt8.ascii.plusSign  // +
+                    || byte == UInt8.ascii.hyphen  // -
+                    || byte == UInt8.ascii.solidus  // /
+                    || byte == UInt8.ascii.equalsSign  // =
+                    || byte == UInt8.ascii.questionMark  // ?
+                    || byte == UInt8.ascii.circumflexAccent  // ^
+                    || byte == 0x5F  // _ lowLine
+                    || byte == 0x60  // ` graveAccent
+                    || byte == 0x7B  // { leftCurlyBracket
+                    || byte == UInt8.ascii.verticalLine  // |
+                    || byte == 0x7D  // } rightCurlyBracket
+                    || byte == 0x7E  // ~ tilde
 
                 guard isAtext else {
                     throw Error.invalidIdRight(String(decoding: idRightBytes, as: UTF8.self))

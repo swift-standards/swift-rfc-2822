@@ -100,7 +100,8 @@ extension RFC_2822.Mailbox: UInt8.ASCII.Serializable {
         if let openIndex = byteArray.lastIndex(of: .ascii.lessThanSign) {
             // name-addr format: "Display Name <addr-spec>"
             guard let closeIndex = byteArray.lastIndex(of: .ascii.greaterThanSign),
-                  closeIndex > openIndex else {
+                closeIndex > openIndex
+            else {
                 throw Error.missingClosingAngleBracket(String(decoding: bytes, as: UTF8.self))
             }
 
@@ -109,22 +110,27 @@ extension RFC_2822.Mailbox: UInt8.ASCII.Serializable {
 
             // Trim whitespace from display name (byte level)
             var trimmedDisplayNameBytes = Array(displayNameBytes)
-            while !trimmedDisplayNameBytes.isEmpty &&
-                  (trimmedDisplayNameBytes.first == .ascii.space || trimmedDisplayNameBytes.first == .ascii.htab) {
+            while !trimmedDisplayNameBytes.isEmpty
+                && (trimmedDisplayNameBytes.first == .ascii.space
+                    || trimmedDisplayNameBytes.first == .ascii.htab) {
                 trimmedDisplayNameBytes.removeFirst()
             }
-            while !trimmedDisplayNameBytes.isEmpty &&
-                  (trimmedDisplayNameBytes.last == .ascii.space || trimmedDisplayNameBytes.last == .ascii.htab) {
+            while !trimmedDisplayNameBytes.isEmpty
+                && (trimmedDisplayNameBytes.last == .ascii.space
+                    || trimmedDisplayNameBytes.last == .ascii.htab) {
                 trimmedDisplayNameBytes.removeLast()
             }
 
             var displayName = String(decoding: trimmedDisplayNameBytes, as: UTF8.self)
 
             // Remove quotes if present
-            if !trimmedDisplayNameBytes.isEmpty &&
-               trimmedDisplayNameBytes.first == .ascii.quotationMark &&
-               trimmedDisplayNameBytes.last == .ascii.quotationMark {
-                displayName = String(decoding: trimmedDisplayNameBytes[1..<(trimmedDisplayNameBytes.count - 1)], as: UTF8.self)
+            if !trimmedDisplayNameBytes.isEmpty
+                && trimmedDisplayNameBytes.first == .ascii.quotationMark
+                && trimmedDisplayNameBytes.last == .ascii.quotationMark {
+                displayName = String(
+                    decoding: trimmedDisplayNameBytes[1..<(trimmedDisplayNameBytes.count - 1)],
+                    as: UTF8.self
+                )
             }
 
             // Extract addr-spec (between < and >)
@@ -186,7 +192,9 @@ extension [UInt8] {
 
         if let displayName = mailbox.displayName {
             // Check if display name needs quoting
-            let needsQuoting = displayName.contains(where: { !$0.ascii.isLetter && !$0.ascii.isDigit })
+            let needsQuoting = displayName.contains(where: {
+                !$0.ascii.isLetter && !$0.ascii.isDigit
+            })
 
             if needsQuoting {
                 self.append(.ascii.quotationMark)

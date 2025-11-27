@@ -40,7 +40,8 @@ extension RFC_2822.AddrSpec.Error: CustomStringConvertible {
         case .missingAtSign(let value):
             return "Missing '@' separator in '\(value)'"
         case .invalidLocalPart(let localPart):
-            return "Invalid local-part '\(localPart)': must be dot-atom or quoted-string per RFC 2822"
+            return
+                "Invalid local-part '\(localPart)': must be dot-atom or quoted-string per RFC 2822"
         case .invalidDomain(let domain):
             return "Invalid domain '\(domain)': must be dot-atom or domain-literal per RFC 2822"
         }

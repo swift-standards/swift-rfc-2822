@@ -81,17 +81,19 @@ extension RFC_2822.Message.Received.NameValuePair: UInt8.ASCII.Serializable {
         var byteArray = Array(bytes)
 
         // Strip leading/trailing whitespace
-        while !byteArray.isEmpty && (byteArray.first == .ascii.space || byteArray.first == .ascii.htab) {
+        while !byteArray.isEmpty
+            && (byteArray.first == .ascii.space || byteArray.first == .ascii.htab) {
             byteArray.removeFirst()
         }
-        while !byteArray.isEmpty && (byteArray.last == .ascii.space || byteArray.last == .ascii.htab) {
+        while !byteArray.isEmpty
+            && (byteArray.last == .ascii.space || byteArray.last == .ascii.htab) {
             byteArray.removeLast()
         }
 
         guard !byteArray.isEmpty else { throw Error.empty }
 
         // Find first whitespace that separates name from value
-        var nameEndIndex: Int? = nil
+        var nameEndIndex: Int?
         for (index, byte) in byteArray.enumerated() {
             if byte == .ascii.space || byte == .ascii.htab {
                 nameEndIndex = index
@@ -107,7 +109,8 @@ extension RFC_2822.Message.Received.NameValuePair: UInt8.ASCII.Serializable {
 
             // Extract value after whitespace
             var valueStart = endIndex
-            while valueStart < byteArray.count && (byteArray[valueStart] == .ascii.space || byteArray[valueStart] == .ascii.htab) {
+            while valueStart < byteArray.count
+                && (byteArray[valueStart] == .ascii.space || byteArray[valueStart] == .ascii.htab) {
                 valueStart += 1
             }
 

@@ -128,7 +128,7 @@ struct AddrSpecTests {
     func testHashable() throws {
         var set: Set<RFC_2822.AddrSpec> = []
         set.insert(try RFC_2822.AddrSpec(ascii: "user@example.com".utf8))
-        set.insert(try RFC_2822.AddrSpec(ascii: "user@example.com".utf8)) // Duplicate
+        set.insert(try RFC_2822.AddrSpec(ascii: "user@example.com".utf8))  // Duplicate
         set.insert(try RFC_2822.AddrSpec(ascii: "other@example.com".utf8))
         #expect(set.count == 2)
     }
@@ -414,7 +414,7 @@ struct TimestampTests {
         var set: Set<RFC_2822.Timestamp> = []
 
         set.insert(RFC_2822.Timestamp(secondsSinceEpoch: 1000.0))
-        set.insert(RFC_2822.Timestamp(secondsSinceEpoch: 1000.0)) // Duplicate
+        set.insert(RFC_2822.Timestamp(secondsSinceEpoch: 1000.0))  // Duplicate
         set.insert(RFC_2822.Timestamp(secondsSinceEpoch: 2000.0))
 
         #expect(set.count == 2)
@@ -462,24 +462,36 @@ struct FieldsTests {
     @Test("Successfully creates fields with required fields")
     func testFieldsCreation() {
         let fields = RFC_2822.Fields(
-            originationDate: RFC_2822.Timestamp(secondsSinceEpoch: 1234567890),
-            from: [RFC_2822.Mailbox(
-                displayName: nil,
-                emailAddress: RFC_2822.AddrSpec(__unchecked: (), localPart: "sender", domain: "example.com")
-            )]
+            originationDate: RFC_2822.Timestamp(secondsSinceEpoch: 1_234_567_890),
+            from: [
+                RFC_2822.Mailbox(
+                    displayName: nil,
+                    emailAddress: RFC_2822.AddrSpec(
+                        __unchecked: (),
+                        localPart: "sender",
+                        domain: "example.com"
+                    )
+                )
+            ]
         )
         #expect(fields.from.count == 1)
-        #expect(fields.originationDate.secondsSinceEpoch == 1234567890)
+        #expect(fields.originationDate.secondsSinceEpoch == 1_234_567_890)
     }
 
     @Test("Successfully creates fields with optional fields")
     func testFieldsWithOptionalFields() {
         let fields = RFC_2822.Fields(
-            originationDate: RFC_2822.Timestamp(secondsSinceEpoch: 1234567890),
-            from: [RFC_2822.Mailbox(
-                displayName: "Sender",
-                emailAddress: RFC_2822.AddrSpec(__unchecked: (), localPart: "sender", domain: "example.com")
-            )],
+            originationDate: RFC_2822.Timestamp(secondsSinceEpoch: 1_234_567_890),
+            from: [
+                RFC_2822.Mailbox(
+                    displayName: "Sender",
+                    emailAddress: RFC_2822.AddrSpec(
+                        __unchecked: (),
+                        localPart: "sender",
+                        domain: "example.com"
+                    )
+                )
+            ],
             messageID: RFC_2822.Message.ID(idLeft: "unique", idRight: "example.com"),
             subject: "Test Subject"
         )
@@ -522,17 +534,29 @@ struct FieldsTests {
     func testEquality() {
         let f1 = RFC_2822.Fields(
             originationDate: RFC_2822.Timestamp(secondsSinceEpoch: 1000),
-            from: [RFC_2822.Mailbox(
-                displayName: nil,
-                emailAddress: RFC_2822.AddrSpec(__unchecked: (), localPart: "a", domain: "b.com")
-            )]
+            from: [
+                RFC_2822.Mailbox(
+                    displayName: nil,
+                    emailAddress: RFC_2822.AddrSpec(
+                        __unchecked: (),
+                        localPart: "a",
+                        domain: "b.com"
+                    )
+                )
+            ]
         )
         let f2 = RFC_2822.Fields(
             originationDate: RFC_2822.Timestamp(secondsSinceEpoch: 1000),
-            from: [RFC_2822.Mailbox(
-                displayName: nil,
-                emailAddress: RFC_2822.AddrSpec(__unchecked: (), localPart: "a", domain: "b.com")
-            )]
+            from: [
+                RFC_2822.Mailbox(
+                    displayName: nil,
+                    emailAddress: RFC_2822.AddrSpec(
+                        __unchecked: (),
+                        localPart: "a",
+                        domain: "b.com"
+                    )
+                )
+            ]
         )
         #expect(f1 == f2)
     }
@@ -540,11 +564,17 @@ struct FieldsTests {
     @Test("Successfully encodes and decodes")
     func testCodable() throws {
         let original = RFC_2822.Fields(
-            originationDate: RFC_2822.Timestamp(secondsSinceEpoch: 1234567890),
-            from: [RFC_2822.Mailbox(
-                displayName: nil,
-                emailAddress: RFC_2822.AddrSpec(__unchecked: (), localPart: "test", domain: "example.com")
-            )],
+            originationDate: RFC_2822.Timestamp(secondsSinceEpoch: 1_234_567_890),
+            from: [
+                RFC_2822.Mailbox(
+                    displayName: nil,
+                    emailAddress: RFC_2822.AddrSpec(
+                        __unchecked: (),
+                        localPart: "test",
+                        domain: "example.com"
+                    )
+                )
+            ],
             subject: "Test"
         )
         let encoded = try JSONEncoder().encode(original)
@@ -560,11 +590,17 @@ struct MessageTests {
     @Test("Successfully creates message with fields only")
     func testMessageFieldsOnly() {
         let fields = RFC_2822.Fields(
-            originationDate: RFC_2822.Timestamp(secondsSinceEpoch: 1234567890),
-            from: [RFC_2822.Mailbox(
-                displayName: nil,
-                emailAddress: RFC_2822.AddrSpec(__unchecked: (), localPart: "sender", domain: "example.com")
-            )]
+            originationDate: RFC_2822.Timestamp(secondsSinceEpoch: 1_234_567_890),
+            from: [
+                RFC_2822.Mailbox(
+                    displayName: nil,
+                    emailAddress: RFC_2822.AddrSpec(
+                        __unchecked: (),
+                        localPart: "sender",
+                        domain: "example.com"
+                    )
+                )
+            ]
         )
         let message = RFC_2822.Message(fields: fields)
         #expect(message.body == nil)
@@ -573,11 +609,17 @@ struct MessageTests {
     @Test("Successfully creates message with body")
     func testMessageWithBody() {
         let fields = RFC_2822.Fields(
-            originationDate: RFC_2822.Timestamp(secondsSinceEpoch: 1234567890),
-            from: [RFC_2822.Mailbox(
-                displayName: nil,
-                emailAddress: RFC_2822.AddrSpec(__unchecked: (), localPart: "sender", domain: "example.com")
-            )]
+            originationDate: RFC_2822.Timestamp(secondsSinceEpoch: 1_234_567_890),
+            from: [
+                RFC_2822.Mailbox(
+                    displayName: nil,
+                    emailAddress: RFC_2822.AddrSpec(
+                        __unchecked: (),
+                        localPart: "sender",
+                        domain: "example.com"
+                    )
+                )
+            ]
         )
         let message = RFC_2822.Message(fields: fields, body: "Hello, World!")
         #expect(message.body != nil)
@@ -585,7 +627,8 @@ struct MessageTests {
 
     @Test("Successfully parses message from bytes")
     func testMessageParsing() throws {
-        let raw = "Date: 1234567890\r\nFrom: sender@example.com\r\nSubject: Test\r\n\r\nThis is the body."
+        let raw =
+            "Date: 1234567890\r\nFrom: sender@example.com\r\nSubject: Test\r\n\r\nThis is the body."
         let message = try RFC_2822.Message(ascii: raw.utf8)
         #expect(message.fields.subject == "Test")
         #expect(message.body != nil)
@@ -609,10 +652,16 @@ struct MessageTests {
     func testEquality() {
         let fields = RFC_2822.Fields(
             originationDate: RFC_2822.Timestamp(secondsSinceEpoch: 1000),
-            from: [RFC_2822.Mailbox(
-                displayName: nil,
-                emailAddress: RFC_2822.AddrSpec(__unchecked: (), localPart: "a", domain: "b.com")
-            )]
+            from: [
+                RFC_2822.Mailbox(
+                    displayName: nil,
+                    emailAddress: RFC_2822.AddrSpec(
+                        __unchecked: (),
+                        localPart: "a",
+                        domain: "b.com"
+                    )
+                )
+            ]
         )
         let m1 = RFC_2822.Message(fields: fields, body: "test")
         let m2 = RFC_2822.Message(fields: fields, body: "test")
@@ -622,11 +671,17 @@ struct MessageTests {
     @Test("Successfully encodes and decodes")
     func testCodable() throws {
         let fields = RFC_2822.Fields(
-            originationDate: RFC_2822.Timestamp(secondsSinceEpoch: 1234567890),
-            from: [RFC_2822.Mailbox(
-                displayName: nil,
-                emailAddress: RFC_2822.AddrSpec(__unchecked: (), localPart: "test", domain: "example.com")
-            )]
+            originationDate: RFC_2822.Timestamp(secondsSinceEpoch: 1_234_567_890),
+            from: [
+                RFC_2822.Mailbox(
+                    displayName: nil,
+                    emailAddress: RFC_2822.AddrSpec(
+                        __unchecked: (),
+                        localPart: "test",
+                        domain: "example.com"
+                    )
+                )
+            ]
         )
         let original = RFC_2822.Message(fields: fields)
         let encoded = try JSONEncoder().encode(original)
@@ -649,7 +704,7 @@ struct MessageBodyTests {
 
     @Test("Successfully creates body from bytes")
     func testBodyFromBytes() {
-        let bytes: [UInt8] = [72, 101, 108, 108, 111] // "Hello"
+        let bytes: [UInt8] = [72, 101, 108, 108, 111]  // "Hello"
         let body = RFC_2822.Message.Body(bytes)
         #expect(body.bytes == bytes)
     }

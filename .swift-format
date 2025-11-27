@@ -7,7 +7,7 @@
   "maximumBlankLines": 1,
   "respectsExistingLineBreaks": true,
   "lineBreakBeforeControlFlowKeywords": false,
-  "lineBreakBeforeEachArgument": true,
+  "lineBreakBeforeEachArgument": false,
   "lineBreakBeforeEachGenericRequirement": true,
   "prioritizeKeepingFunctionOutputTogether": true,
   "indentConditionalCompilationBlocks": true,

@@ -94,7 +94,8 @@ extension RFC_2822.Message.Received: UInt8.ASCII.Serializable {
         var timestampBytes = Array(byteArray[timestampStart...])
 
         // Strip leading whitespace from timestamp
-        while !timestampBytes.isEmpty && (timestampBytes.first == .ascii.space || timestampBytes.first == .ascii.htab) {
+        while !timestampBytes.isEmpty
+            && (timestampBytes.first == .ascii.space || timestampBytes.first == .ascii.htab) {
             timestampBytes.removeFirst()
         }
 
@@ -114,7 +115,7 @@ extension RFC_2822.Message.Received: UInt8.ASCII.Serializable {
         var tokens: [NameValuePair] = []
 
         // Simple parsing: split on whitespace, pair up name-value
-        var currentName: String? = nil
+        var currentName: String?
         var currentToken = [UInt8]()
 
         for byte in nameValBytes {
@@ -122,7 +123,9 @@ extension RFC_2822.Message.Received: UInt8.ASCII.Serializable {
                 if !currentToken.isEmpty {
                     let tokenString = String(decoding: currentToken, as: UTF8.self)
                     if let name = currentName {
-                        tokens.append(NameValuePair(__unchecked: (), name: name, value: tokenString))
+                        tokens.append(
+                            NameValuePair(__unchecked: (), name: name, value: tokenString)
+                        )
                         currentName = nil
                     } else {
                         currentName = tokenString

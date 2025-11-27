@@ -160,13 +160,13 @@ extension RFC_2822.Message.ResentBlock: UInt8.ASCII.Serializable {
             lines.append(currentLine)
         }
 
-        var timestamp: RFC_2822.Timestamp? = nil
+        var timestamp: RFC_2822.Timestamp?
         var from: [RFC_2822.Mailbox] = []
-        var sender: RFC_2822.Mailbox? = nil
-        var to: [RFC_2822.Address]? = nil
-        var cc: [RFC_2822.Address]? = nil
-        var bcc: [RFC_2822.Address]? = nil
-        var messageID: RFC_2822.Message.ID? = nil
+        var sender: RFC_2822.Mailbox?
+        var to: [RFC_2822.Address]?
+        var cc: [RFC_2822.Address]?
+        var bcc: [RFC_2822.Address]?
+        var messageID: RFC_2822.Message.ID?
 
         for line in lines {
             // Find colon separator

@@ -3,5 +3,8 @@
 
 parent_config: https://raw.githubusercontent.com/swift-standards/swift-standards/main/.swiftlint.yml
 
-# Package-specific overrides (if needed)
-# Add any swift-rfc-2822 specific rules here
+# Package-specific overrides
+# RFC 2822 parsing requires complex state machines that exceed normal complexity thresholds
+disabled_rules:
+  - cyclomatic_complexity
+  - function_body_length

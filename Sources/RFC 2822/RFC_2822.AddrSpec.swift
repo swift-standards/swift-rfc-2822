@@ -136,14 +136,14 @@ extension RFC_2822.AddrSpec: UInt8.ASCII.Serializable {
                     isEscaped = true
                 } else {
                     // qtext validation
-                    let isValidQText = (byte >= 1 && byte <= 8) ||
-                        byte == 11 || byte == 12 ||
-                        (byte >= 14 && byte <= 31) ||
-                        byte == 33 ||
-                        (byte >= 35 && byte <= 91) ||
-                        (byte >= 93 && byte <= 126)
+                    let isValidQText =
+                        (byte >= 1 && byte <= 8) || byte == 11 || byte == 12
+                        || (byte >= 14 && byte <= 31) || byte == 33 || (byte >= 35 && byte <= 91)
+                        || (byte >= 93 && byte <= 126)
                     guard isValidQText else {
-                        throw Error.invalidLocalPart(String(decoding: localPartBytes, as: UTF8.self))
+                        throw Error.invalidLocalPart(
+                            String(decoding: localPartBytes, as: UTF8.self)
+                        )
                     }
                 }
             }
@@ -171,26 +171,26 @@ extension RFC_2822.AddrSpec: UInt8.ASCII.Serializable {
                 // Validate atext or dot
                 if byte == UInt8.ascii.period { continue }
 
-                let isAtext = byte.ascii.isLetter || byte.ascii.isDigit ||
-                    byte == 0x21 ||                             // ! exclamationMark
-                    byte == UInt8.ascii.numberSign ||           // #
-                    byte == UInt8.ascii.dollarSign ||           // $
-                    byte == UInt8.ascii.percentSign ||          // %
-                    byte == UInt8.ascii.ampersand ||            // &
-                    byte == UInt8.ascii.apostrophe ||           // '
-                    byte == UInt8.ascii.asterisk ||             // *
-                    byte == UInt8.ascii.plusSign ||             // +
-                    byte == UInt8.ascii.hyphen ||               // -
-                    byte == UInt8.ascii.solidus ||              // /
-                    byte == UInt8.ascii.equalsSign ||           // =
-                    byte == UInt8.ascii.questionMark ||         // ?
-                    byte == UInt8.ascii.circumflexAccent ||     // ^
-                    byte == 0x5F ||                             // _ lowLine
-                    byte == 0x60 ||                             // ` graveAccent
-                    byte == 0x7B ||                             // { leftCurlyBracket
-                    byte == UInt8.ascii.verticalLine ||         // |
-                    byte == 0x7D ||                             // } rightCurlyBracket
-                    byte == 0x7E                                // ~ tilde
+                let isAtext =
+                    byte.ascii.isLetter || byte.ascii.isDigit || byte == 0x21  // ! exclamationMark
+                    || byte == UInt8.ascii.numberSign  // #
+                    || byte == UInt8.ascii.dollarSign  // $
+                    || byte == UInt8.ascii.percentSign  // %
+                    || byte == UInt8.ascii.ampersand  // &
+                    || byte == UInt8.ascii.apostrophe  // '
+                    || byte == UInt8.ascii.asterisk  // *
+                    || byte == UInt8.ascii.plusSign  // +
+                    || byte == UInt8.ascii.hyphen  // -
+                    || byte == UInt8.ascii.solidus  // /
+                    || byte == UInt8.ascii.equalsSign  // =
+                    || byte == UInt8.ascii.questionMark  // ?
+                    || byte == UInt8.ascii.circumflexAccent  // ^
+                    || byte == 0x5F  // _ lowLine
+                    || byte == 0x60  // ` graveAccent
+                    || byte == 0x7B  // { leftCurlyBracket
+                    || byte == UInt8.ascii.verticalLine  // |
+                    || byte == 0x7D  // } rightCurlyBracket
+                    || byte == 0x7E  // ~ tilde
 
                 guard isAtext else {
                     throw Error.invalidLocalPart(String(decoding: localPartBytes, as: UTF8.self))
@@ -208,7 +208,8 @@ extension RFC_2822.AddrSpec: UInt8.ASCII.Serializable {
         let firstDomainByte = domainBytes[0]
         let lastDomainByte = domainBytes[domainBytes.count - 1]
 
-        if firstDomainByte == .ascii.leftSquareBracket && lastDomainByte == .ascii.rightSquareBracket {
+        if firstDomainByte == .ascii.leftSquareBracket
+            && lastDomainByte == .ascii.rightSquareBracket {
             // Domain-literal format
             // domain-literal = "[" *dcontent "]"
             // dcontent = dtext / quoted-pair
@@ -217,9 +218,11 @@ extension RFC_2822.AddrSpec: UInt8.ASCII.Serializable {
             for i in 1..<(domainBytes.count - 1) {
                 let byte = domainBytes[i]
                 if isEscaped {
-                    guard byte == UInt8.ascii.leftSquareBracket ||
-                          byte == UInt8.ascii.rightSquareBracket ||
-                          byte == UInt8.ascii.reverseSolidus else {
+                    guard
+                        byte == UInt8.ascii.leftSquareBracket
+                            || byte == UInt8.ascii.rightSquareBracket
+                            || byte == UInt8.ascii.reverseSolidus
+                    else {
                         throw Error.invalidDomain(String(decoding: domainBytes, as: UTF8.self))
                     }
                     isEscaped = false
@@ -227,11 +230,10 @@ extension RFC_2822.AddrSpec: UInt8.ASCII.Serializable {
                     isEscaped = true
                 } else {
                     // dtext validation
-                    let isValidDText = (byte >= 1 && byte <= 8) ||
-                        byte == 11 || byte == 12 ||
-                        (byte >= 14 && byte <= 31) ||
-                        (byte >= 33 && byte <= 90) ||
-                        (byte >= 94 && byte <= 126)
+                    let isValidDText =
+                        (byte >= 1 && byte <= 8) || byte == 11 || byte == 12
+                        || (byte >= 14 && byte <= 31) || (byte >= 33 && byte <= 90)
+                        || (byte >= 94 && byte <= 126)
                     guard isValidDText else {
                         throw Error.invalidDomain(String(decoding: domainBytes, as: UTF8.self))
                     }
@@ -260,26 +262,26 @@ extension RFC_2822.AddrSpec: UInt8.ASCII.Serializable {
                 // Validate atext or dot
                 if byte == UInt8.ascii.period { continue }
 
-                let isAtext = byte.ascii.isLetter || byte.ascii.isDigit ||
-                    byte == 0x21 ||                             // ! exclamationMark
-                    byte == UInt8.ascii.numberSign ||           // #
-                    byte == UInt8.ascii.dollarSign ||           // $
-                    byte == UInt8.ascii.percentSign ||          // %
-                    byte == UInt8.ascii.ampersand ||            // &
-                    byte == UInt8.ascii.apostrophe ||           // '
-                    byte == UInt8.ascii.asterisk ||             // *
-                    byte == UInt8.ascii.plusSign ||             // +
-                    byte == UInt8.ascii.hyphen ||               // -
-                    byte == UInt8.ascii.solidus ||              // /
-                    byte == UInt8.ascii.equalsSign ||           // =
-                    byte == UInt8.ascii.questionMark ||         // ?
-                    byte == UInt8.ascii.circumflexAccent ||     // ^
-                    byte == 0x5F ||                             // _ lowLine
-                    byte == 0x60 ||                             // ` graveAccent
-                    byte == 0x7B ||                             // { leftCurlyBracket
-                    byte == UInt8.ascii.verticalLine ||         // |
-                    byte == 0x7D ||                             // } rightCurlyBracket
-                    byte == 0x7E                                // ~ tilde
+                let isAtext =
+                    byte.ascii.isLetter || byte.ascii.isDigit || byte == 0x21  // ! exclamationMark
+                    || byte == UInt8.ascii.numberSign  // #
+                    || byte == UInt8.ascii.dollarSign  // $
+                    || byte == UInt8.ascii.percentSign  // %
+                    || byte == UInt8.ascii.ampersand  // &
+                    || byte == UInt8.ascii.apostrophe  // '
+                    || byte == UInt8.ascii.asterisk  // *
+                    || byte == UInt8.ascii.plusSign  // +
+                    || byte == UInt8.ascii.hyphen  // -
+                    || byte == UInt8.ascii.solidus  // /
+                    || byte == UInt8.ascii.equalsSign  // =
+                    || byte == UInt8.ascii.questionMark  // ?
+                    || byte == UInt8.ascii.circumflexAccent  // ^
+                    || byte == 0x5F  // _ lowLine
+                    || byte == 0x60  // ` graveAccent
+                    || byte == 0x7B  // { leftCurlyBracket
+                    || byte == UInt8.ascii.verticalLine  // |
+                    || byte == 0x7D  // } rightCurlyBracket
+                    || byte == 0x7E  // ~ tilde
 
                 guard isAtext else {
                     throw Error.invalidDomain(String(decoding: domainBytes, as: UTF8.self))

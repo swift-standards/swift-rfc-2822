@@ -243,7 +243,8 @@ extension RFC_2822.Fields: UInt8.ASCII.Serializable {
                 i += 2
 
                 // Check if next line is a continuation (starts with space/tab)
-                if i < byteArray.count && (byteArray[i] == .ascii.space || byteArray[i] == .ascii.htab) {
+                if i < byteArray.count
+                    && (byteArray[i] == .ascii.space || byteArray[i] == .ascii.htab) {
                     // Folded header - continue current line
                     currentLine.append(.ascii.space)
                     i += 1  // Skip the leading whitespace
@@ -262,7 +263,8 @@ extension RFC_2822.Fields: UInt8.ASCII.Serializable {
                 // LF only (lenient parsing)
                 i += 1
 
-                if i < byteArray.count && (byteArray[i] == .ascii.space || byteArray[i] == .ascii.htab) {
+                if i < byteArray.count
+                    && (byteArray[i] == .ascii.space || byteArray[i] == .ascii.htab) {
                     currentLine.append(.ascii.space)
                     i += 1
                 } else {
@@ -310,7 +312,10 @@ extension RFC_2822.Fields: UInt8.ASCII.Serializable {
                 do {
                     date = try RFC_2822.Timestamp(ascii: valueBytes)
                 } catch {
-                    throw Error.invalidFieldFormat("Date", String(decoding: valueBytes, as: UTF8.self))
+                    throw Error.invalidFieldFormat(
+                        "Date",
+                        String(decoding: valueBytes, as: UTF8.self)
+                    )
                 }
             } else if bytesEqualCaseInsensitive(nameBytes, "from") {
                 // Parse comma-separated mailboxes
@@ -521,7 +526,10 @@ extension [UInt8] {
         // Resent fields
         for block in fields.resentFields {
             addField("Resent-Date", "\(block.timestamp.secondsSinceEpoch)")
-            addField("Resent-From", block.from.map { String(describing: $0) }.joined(separator: ", "))
+            addField(
+                "Resent-From",
+                block.from.map { String(describing: $0) }.joined(separator: ", ")
+            )
             if let sender = block.sender {
                 addField("Resent-Sender", String(describing: sender))
             }
