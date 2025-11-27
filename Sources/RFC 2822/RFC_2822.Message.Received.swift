@@ -22,50 +22,170 @@ extension RFC_2822.Message {
     /// name-val-list = [CFWS] [name-val-pair *(CFWS name-val-pair)]
     /// name-val-pair = item-name CFWS item-value
     /// ```
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// let received = try RFC_2822.Message.Received(ascii: "from mail.example.com by mx.example.org; 1234567890".utf8)
+    /// ```
     public struct Received: Hashable, Sendable, Codable {
-        public struct NameValuePair: Hashable, Sendable, Codable {
-            public let name: String
-            public let value: String
-
-            public init(name: String, value: String) {
-                self.name = name
-                self.value = value
-            }
-        }
-
         public let tokens: [NameValuePair]
         public let timestamp: RFC_2822.Timestamp
 
-        public init(tokens: [NameValuePair], timestamp: RFC_2822.Timestamp) {
+        /// Creates a received field WITHOUT validation
+        init(__unchecked: Void, tokens: [NameValuePair], timestamp: RFC_2822.Timestamp) {
             self.tokens = tokens
             self.timestamp = timestamp
+        }
+
+        /// Creates a received field with tokens and timestamp
+        public init(tokens: [NameValuePair], timestamp: RFC_2822.Timestamp) {
+            self.init(__unchecked: (), tokens: tokens, timestamp: timestamp)
         }
     }
 }
 
-// MARK: - NameValuePair [UInt8] Conversion
+// Note: NameValuePair is defined in RFC_2822.Message.Received.NameValuePair.swift
 
-extension [UInt8] {
-    /// Creates byte representation of Received field name-value pair
+// MARK: - UInt8.ASCII.Serializable
+
+extension RFC_2822.Message.Received: UInt8.ASCII.Serializable {
+    public static let serialize: @Sendable (Self) -> [UInt8] = [UInt8].init
+
+    /// Errors during received field parsing
+    public enum Error: Swift.Error, Sendable, Equatable, CustomStringConvertible {
+        case empty
+        case missingSemicolon(_ value: String)
+        case missingTimestamp(_ value: String)
+        case invalidTimestamp(_ underlying: RFC_2822.Timestamp.Error)
+        case invalidNameValuePair(_ underlying: NameValuePair.Error)
+
+        public var description: String {
+            switch self {
+            case .empty:
+                return "Received field cannot be empty"
+            case .missingSemicolon(let value):
+                return "Received field must contain semicolon before timestamp: '\(value)'"
+            case .missingTimestamp(let value):
+                return "Received field must contain timestamp after semicolon: '\(value)'"
+            case .invalidTimestamp(let error):
+                return "Invalid timestamp in received field: \(error)"
+            case .invalidNameValuePair(let error):
+                return "Invalid name-value pair: \(error)"
+            }
+        }
+    }
+
+    /// Parses a received field from ASCII bytes (AUTHORITATIVE IMPLEMENTATION)
     ///
-    /// Formats as "name value".
+    /// ## RFC 2822 Section 3.6.7
+    ///
+    /// ```
+    /// received = "Received:" name-val-list ";" date-time CRLF
+    /// ```
     ///
     /// ## Category Theory
     ///
-    /// Natural transformation: RFC_2822.Message.Received.NameValuePair → [UInt8]
+    /// Parsing transformation:
+    /// - **Domain**: [UInt8] (ASCII bytes)
+    /// - **Codomain**: RFC_2822.Message.Received (structured data)
     ///
-    /// - Parameter pair: The name-value pair to serialize
-    public init(_ pair: RFC_2822.Message.Received.NameValuePair) {
-        self = []
-        self.reserveCapacity(pair.name.count + 1 + pair.value.count)
+    /// ## Example
+    ///
+    /// ```swift
+    /// let received = try RFC_2822.Message.Received(ascii: "from mail.example.com; 1234567890".utf8)
+    /// ```
+    ///
+    /// - Parameter bytes: The received field as ASCII bytes
+    /// - Throws: `Error` if parsing fails
+    public init<Bytes: Collection>(ascii bytes: Bytes, in context: Void = ()) throws(Error)
+    where Bytes.Element == UInt8 {
+        guard !bytes.isEmpty else { throw Error.empty }
 
-        self.append(contentsOf: pair.name.utf8)
-        self.append(.ascii.space)
-        self.append(contentsOf: pair.value.utf8)
+        let byteArray = Array(bytes)
+
+        // Find semicolon that separates name-val-list from timestamp
+        guard let semicolonIndex = byteArray.lastIndex(of: .ascii.semicolon) else {
+            throw Error.missingSemicolon(String(decoding: bytes, as: UTF8.self))
+        }
+
+        // Parse timestamp after semicolon
+        let timestampStart = byteArray.index(after: semicolonIndex)
+        guard timestampStart < byteArray.endIndex else {
+            throw Error.missingTimestamp(String(decoding: bytes, as: UTF8.self))
+        }
+
+        var timestampBytes = Array(byteArray[timestampStart...])
+
+        // Strip leading whitespace from timestamp
+        while !timestampBytes.isEmpty && (timestampBytes.first == .ascii.space || timestampBytes.first == .ascii.htab) {
+            timestampBytes.removeFirst()
+        }
+
+        guard !timestampBytes.isEmpty else {
+            throw Error.missingTimestamp(String(decoding: bytes, as: UTF8.self))
+        }
+
+        let timestamp: RFC_2822.Timestamp
+        do {
+            timestamp = try RFC_2822.Timestamp(ascii: timestampBytes)
+        } catch {
+            throw Error.invalidTimestamp(error)
+        }
+
+        // Parse name-value pairs before semicolon
+        let nameValBytes = Array(byteArray[..<semicolonIndex])
+        var tokens: [NameValuePair] = []
+
+        // Simple parsing: split on whitespace, pair up name-value
+        var currentName: String? = nil
+        var currentToken = [UInt8]()
+
+        for byte in nameValBytes {
+            if byte == .ascii.space || byte == .ascii.htab {
+                if !currentToken.isEmpty {
+                    let tokenString = String(decoding: currentToken, as: UTF8.self)
+                    if let name = currentName {
+                        tokens.append(NameValuePair(__unchecked: (), name: name, value: tokenString))
+                        currentName = nil
+                    } else {
+                        currentName = tokenString
+                    }
+                    currentToken = []
+                }
+            } else {
+                currentToken.append(byte)
+            }
+        }
+
+        // Handle last token
+        if !currentToken.isEmpty {
+            let tokenString = String(decoding: currentToken, as: UTF8.self)
+            if let name = currentName {
+                tokens.append(NameValuePair(__unchecked: (), name: name, value: tokenString))
+            } else if !tokenString.isEmpty {
+                // Unpaired name - use as both name and value
+                tokens.append(NameValuePair(__unchecked: (), name: tokenString, value: ""))
+            }
+        }
+
+        self.init(__unchecked: (), tokens: tokens, timestamp: timestamp)
     }
 }
 
-// MARK: - Received [UInt8] Conversion
+// MARK: - Protocol Conformances
+
+extension RFC_2822.Message.Received: UInt8.ASCII.RawRepresentable {
+    public typealias RawValue = String
+}
+
+extension RFC_2822.Message.Received: CustomStringConvertible {
+    public var description: String {
+        String(self)
+    }
+}
+
+// MARK: - [UInt8] Conversion
 
 extension [UInt8] {
     /// Creates byte representation of RFC 2822 Received field
@@ -95,10 +215,13 @@ extension [UInt8] {
     }
 }
 
-// MARK: - CustomStringConvertible
+// MARK: - StringProtocol Conversion
 
-extension RFC_2822.Message.Received: CustomStringConvertible {
-    public var description: String {
-        String(decoding: [UInt8](self), as: UTF8.self)
+extension StringProtocol {
+    /// Create a string from an RFC 2822 Received field
+    ///
+    /// - Parameter received: The received field to convert
+    public init(_ received: RFC_2822.Message.Received) {
+        self = Self(decoding: received.bytes, as: UTF8.self)
     }
 }
