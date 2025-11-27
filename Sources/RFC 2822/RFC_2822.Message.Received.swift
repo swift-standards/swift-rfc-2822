@@ -52,30 +52,6 @@ extension RFC_2822.Message {
 extension RFC_2822.Message.Received: UInt8.ASCII.Serializable {
     public static let serialize: @Sendable (Self) -> [UInt8] = [UInt8].init
 
-    /// Errors during received field parsing
-    public enum Error: Swift.Error, Sendable, Equatable, CustomStringConvertible {
-        case empty
-        case missingSemicolon(_ value: String)
-        case missingTimestamp(_ value: String)
-        case invalidTimestamp(_ underlying: RFC_2822.Timestamp.Error)
-        case invalidNameValuePair(_ underlying: NameValuePair.Error)
-
-        public var description: String {
-            switch self {
-            case .empty:
-                return "Received field cannot be empty"
-            case .missingSemicolon(let value):
-                return "Received field must contain semicolon before timestamp: '\(value)'"
-            case .missingTimestamp(let value):
-                return "Received field must contain timestamp after semicolon: '\(value)'"
-            case .invalidTimestamp(let error):
-                return "Invalid timestamp in received field: \(error)"
-            case .invalidNameValuePair(let error):
-                return "Invalid name-value pair: \(error)"
-            }
-        }
-    }
-
     /// Parses a received field from ASCII bytes (AUTHORITATIVE IMPLEMENTATION)
     ///
     /// ## RFC 2822 Section 3.6.7

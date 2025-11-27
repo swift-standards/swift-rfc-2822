@@ -55,21 +55,6 @@ extension RFC_2822.Timestamp: Hashable {}
 extension RFC_2822.Timestamp: UInt8.ASCII.Serializable {
     public static let serialize: @Sendable (Self) -> [UInt8] = [UInt8].init
 
-    /// Errors during timestamp parsing
-    public enum Error: Swift.Error, Sendable, Equatable, CustomStringConvertible {
-        case empty
-        case invalidFormat(_ value: String)
-
-        public var description: String {
-            switch self {
-            case .empty:
-                return "Timestamp cannot be empty"
-            case .invalidFormat(let value):
-                return "Invalid timestamp format: '\(value)'"
-            }
-        }
-    }
-
     /// Parses a timestamp from ASCII bytes (AUTHORITATIVE IMPLEMENTATION)
     ///
     /// This implementation parses a simple numeric seconds-since-epoch format.

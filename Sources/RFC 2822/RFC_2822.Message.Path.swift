@@ -48,24 +48,6 @@ extension RFC_2822.Message {
 extension RFC_2822.Message.Path: UInt8.ASCII.Serializable {
     public static let serialize: @Sendable (Self) -> [UInt8] = [UInt8].init
 
-    /// Errors during path parsing
-    public enum Error: Swift.Error, Sendable, Equatable, CustomStringConvertible {
-        case empty
-        case missingAngleBrackets(_ value: String)
-        case invalidAddrSpec(_ underlying: RFC_2822.AddrSpec.Error)
-
-        public var description: String {
-            switch self {
-            case .empty:
-                return "Path cannot be empty"
-            case .missingAngleBrackets(let value):
-                return "Path must be enclosed in angle brackets: '\(value)'"
-            case .invalidAddrSpec(let error):
-                return "Invalid addr-spec in path: \(error)"
-            }
-        }
-    }
-
     /// Parses a return path from ASCII bytes (AUTHORITATIVE IMPLEMENTATION)
     ///
     /// ## RFC 2822 Section 3.6.7

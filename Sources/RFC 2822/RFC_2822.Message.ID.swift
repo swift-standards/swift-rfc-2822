@@ -65,30 +65,6 @@ extension RFC_2822.Message.ID: Hashable {
 extension RFC_2822.Message.ID: UInt8.ASCII.Serializable {
     public static let serialize: @Sendable (Self) -> [UInt8] = [UInt8].init
 
-    /// Errors during message ID parsing
-    public enum Error: Swift.Error, Sendable, Equatable, CustomStringConvertible {
-        case empty
-        case missingAngleBrackets(_ value: String)
-        case missingAtSign(_ value: String)
-        case invalidIdLeft(_ value: String)
-        case invalidIdRight(_ value: String)
-
-        public var description: String {
-            switch self {
-            case .empty:
-                return "Message ID cannot be empty"
-            case .missingAngleBrackets(let value):
-                return "Message ID must be enclosed in angle brackets: '\(value)'"
-            case .missingAtSign(let value):
-                return "Message ID must contain '@': '\(value)'"
-            case .invalidIdLeft(let value):
-                return "Invalid id-left in message ID: '\(value)'"
-            case .invalidIdRight(let value):
-                return "Invalid id-right in message ID: '\(value)'"
-            }
-        }
-    }
-
     /// Parses a message ID from ASCII bytes (AUTHORITATIVE IMPLEMENTATION)
     ///
     /// ## RFC 2822 Section 3.6.4

@@ -52,24 +52,6 @@ extension RFC_2822.Message.Received {
 extension RFC_2822.Message.Received.NameValuePair: UInt8.ASCII.Serializable {
     public static let serialize: @Sendable (Self) -> [UInt8] = [UInt8].init
 
-    /// Errors during name-value pair parsing
-    public enum Error: Swift.Error, Sendable, Equatable, CustomStringConvertible {
-        case empty
-        case missingValue(_ name: String)
-        case invalidName(_ value: String)
-
-        public var description: String {
-            switch self {
-            case .empty:
-                return "Name-value pair cannot be empty"
-            case .missingValue(let name):
-                return "Name-value pair missing value for name: '\(name)'"
-            case .invalidName(let value):
-                return "Invalid name in name-value pair: '\(value)'"
-            }
-        }
-    }
-
     /// Parses a name-value pair from ASCII bytes (AUTHORITATIVE IMPLEMENTATION)
     ///
     /// ## RFC 2822 Section 3.6.7
