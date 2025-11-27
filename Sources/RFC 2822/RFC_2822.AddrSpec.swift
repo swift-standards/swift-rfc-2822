@@ -306,3 +306,48 @@ extension RFC_2822.AddrSpec: CustomStringConvertible {
         String(self)
     }
 }
+
+// MARK: - [UInt8] Conversion
+
+extension [UInt8] {
+    /// Creates byte representation of RFC 2822 AddrSpec
+    ///
+    /// This is the canonical serialization to bytes for addr-spec format (local-part@domain).
+    ///
+    /// ## Category Theory
+    ///
+    /// This is the universal serialization (natural transformation):
+    /// - **Domain**: RFC_2822.AddrSpec (structured data)
+    /// - **Codomain**: [UInt8] (bytes)
+    ///
+    /// String representation is derived as composition:
+    /// ```
+    /// AddrSpec → [UInt8] → String (UTF-8 interpretation)
+    /// ```
+    ///
+    /// - Parameter addrSpec: The addr-spec to serialize
+    public init(_ addrSpec: RFC_2822.AddrSpec) {
+        self = []
+        self.reserveCapacity(addrSpec.localPart.count + 1 + addrSpec.domain.count)
+
+        // local-part
+        self.append(contentsOf: addrSpec.localPart.utf8)
+
+        // @
+        self.append(.ascii.commercialAt)
+
+        // domain
+        self.append(contentsOf: addrSpec.domain.utf8)
+    }
+}
+
+// MARK: - StringProtocol Conversion
+
+extension StringProtocol {
+    /// Create a string from an RFC 2822 AddrSpec
+    ///
+    /// - Parameter addrSpec: The addr-spec to convert
+    public init(_ addrSpec: RFC_2822.AddrSpec) {
+        self = Self(decoding: addrSpec.bytes, as: UTF8.self)
+    }
+}

@@ -231,3 +231,51 @@ extension RFC_2822.Address: CustomStringConvertible {
         String(self)
     }
 }
+
+// MARK: - [UInt8] Conversion
+
+extension [UInt8] {
+    /// Creates byte representation of RFC 2822 Address
+    ///
+    /// ## Category Theory
+    ///
+    /// Natural transformation: RFC_2822.Address → [UInt8]
+    ///
+    /// - Parameter address: The address to serialize
+    public init(_ address: RFC_2822.Address) {
+        self = []
+
+        switch address.kind {
+        case .mailbox(let mailbox):
+            self.append(contentsOf: [UInt8](mailbox))
+
+        case .group(let displayName, let mailboxes):
+            // Group format: "Display Name: mailbox1, mailbox2;"
+            self.append(contentsOf: displayName.utf8)
+            self.append(.ascii.colon)
+
+            for (index, mailbox) in mailboxes.enumerated() {
+                if index > 0 {
+                    self.append(.ascii.comma)
+                    self.append(.ascii.space)
+                } else {
+                    self.append(.ascii.space)
+                }
+                self.append(contentsOf: [UInt8](mailbox))
+            }
+
+            self.append(.ascii.semicolon)
+        }
+    }
+}
+
+// MARK: - StringProtocol Conversion
+
+extension StringProtocol {
+    /// Create a string from an RFC 2822 Address
+    ///
+    /// - Parameter address: The address to convert
+    public init(_ address: RFC_2822.Address) {
+        self = Self(decoding: address.bytes, as: UTF8.self)
+    }
+}

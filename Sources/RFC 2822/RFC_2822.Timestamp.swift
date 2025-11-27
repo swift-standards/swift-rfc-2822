@@ -114,3 +114,33 @@ extension RFC_2822.Timestamp: CustomStringConvertible {
         String(self)
     }
 }
+
+// MARK: - [UInt8] Conversion
+
+extension [UInt8] {
+    /// Creates byte representation of RFC 2822 Timestamp
+    ///
+    /// Serializes as seconds since epoch in decimal ASCII.
+    /// Full RFC 2822 date-time formatting would require Date/Calendar APIs.
+    ///
+    /// ## Category Theory
+    ///
+    /// Natural transformation: RFC_2822.Timestamp → [UInt8]
+    ///
+    /// - Parameter timestamp: The timestamp to serialize
+    public init(_ timestamp: RFC_2822.Timestamp) {
+        self = []
+        self.append(contentsOf: "\(timestamp.secondsSinceEpoch)".utf8)
+    }
+}
+
+// MARK: - StringProtocol Conversion
+
+extension StringProtocol {
+    /// Create a string from an RFC 2822 Timestamp
+    ///
+    /// - Parameter timestamp: The timestamp to convert
+    public init(_ timestamp: RFC_2822.Timestamp) {
+        self = Self(decoding: timestamp.bytes, as: UTF8.self)
+    }
+}

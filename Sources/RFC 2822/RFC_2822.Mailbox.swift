@@ -168,3 +168,52 @@ extension RFC_2822.Mailbox: CustomStringConvertible {
         String(self)
     }
 }
+
+// MARK: - [UInt8] Conversion
+
+extension [UInt8] {
+    /// Creates byte representation of RFC 2822 Mailbox
+    ///
+    /// Formats as either "Display Name <addr-spec>" or just "addr-spec".
+    ///
+    /// ## Category Theory
+    ///
+    /// Natural transformation: RFC_2822.Mailbox → [UInt8]
+    ///
+    /// - Parameter mailbox: The mailbox to serialize
+    public init(_ mailbox: RFC_2822.Mailbox) {
+        self = []
+
+        if let displayName = mailbox.displayName {
+            // Check if display name needs quoting
+            let needsQuoting = displayName.contains(where: { !$0.ascii.isLetter && !$0.ascii.isDigit })
+
+            if needsQuoting {
+                self.append(.ascii.quotationMark)
+                self.append(contentsOf: displayName.utf8)
+                self.append(.ascii.quotationMark)
+            } else {
+                self.append(contentsOf: displayName.utf8)
+            }
+
+            self.append(.ascii.space)
+            self.append(.ascii.lessThanSign)
+            self.append(contentsOf: [UInt8](mailbox.emailAddress))
+            self.append(.ascii.greaterThanSign)
+        } else {
+            // Just the addr-spec
+            self.append(contentsOf: [UInt8](mailbox.emailAddress))
+        }
+    }
+}
+
+// MARK: - StringProtocol Conversion
+
+extension StringProtocol {
+    /// Create a string from an RFC 2822 Mailbox
+    ///
+    /// - Parameter mailbox: The mailbox to convert
+    public init(_ mailbox: RFC_2822.Mailbox) {
+        self = Self(decoding: mailbox.bytes, as: UTF8.self)
+    }
+}

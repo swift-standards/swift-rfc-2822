@@ -124,3 +124,34 @@ extension RFC_2822.Message.Body: ExpressibleByStringLiteral {
         self.init(value)
     }
 }
+
+// MARK: - [UInt8] Conversion
+
+extension [UInt8] {
+    /// Creates byte representation of RFC 2822 message body
+    ///
+    /// This is the identity transformation - the body is already stored as bytes.
+    ///
+    /// ## Category Theory
+    ///
+    /// Natural transformation: RFC_2822.Message.Body → [UInt8]
+    /// ```
+    /// Body → [UInt8] (identity)
+    /// ```
+    ///
+    /// - Parameter body: The message body
+    public init(_ body: RFC_2822.Message.Body) {
+        self = body.bytes
+    }
+}
+
+// MARK: - StringProtocol Conversion
+
+extension StringProtocol {
+    /// Create a string from an RFC 2822 Message Body
+    ///
+    /// - Parameter body: The body to convert
+    public init(_ body: RFC_2822.Message.Body) {
+        self = Self(decoding: body.bytes, as: UTF8.self)
+    }
+}
