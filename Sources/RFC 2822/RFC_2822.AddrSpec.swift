@@ -97,7 +97,8 @@ extension RFC_2822.AddrSpec: UInt8.ASCII.Serializable {
         ascii addrSpec: RFC_2822.AddrSpec,
         into buffer: inout Buffer
     ) where Buffer: RangeReplaceableCollection, Buffer.Element == UInt8 {
-        buffer.reserveCapacity(buffer.count + addrSpec.localPart.utf8.count + 1 + addrSpec.domain.utf8.count)
+        buffer.reserveCapacity(
+            buffer.count + addrSpec.localPart.utf8.count + 1 + addrSpec.domain.utf8.count)
 
         // local-part
         buffer.append(contentsOf: addrSpec.localPart.utf8)
@@ -332,9 +333,10 @@ extension RFC_2822.AddrSpec {
 
             if isEscaped {
                 // Only certain characters can follow backslash
-                guard byte == .ascii.leftSquareBracket
-                    || byte == .ascii.rightSquareBracket
-                    || byte == .ascii.reverseSolidus
+                guard
+                    byte == .ascii.leftSquareBracket
+                        || byte == .ascii.rightSquareBracket
+                        || byte == .ascii.reverseSolidus
                 else {
                     throw Error.invalidDomain(String(decoding: bytes, as: UTF8.self))
                 }

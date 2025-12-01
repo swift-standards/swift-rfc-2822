@@ -62,7 +62,7 @@ extension RFC_2822.Message.Body: UInt8.ASCII.Serializable {
     static public func serialize<Buffer>(
         ascii body: RFC_2822.Message.Body,
         into buffer: inout Buffer
-    ) where Buffer : RangeReplaceableCollection, Buffer.Element == UInt8 {
+    ) where Buffer: RangeReplaceableCollection, Buffer.Element == UInt8 {
         buffer.append(contentsOf: body.bytes)
     }
 

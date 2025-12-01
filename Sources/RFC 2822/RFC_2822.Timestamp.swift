@@ -56,7 +56,7 @@ extension RFC_2822.Timestamp: UInt8.ASCII.Serializable {
     static public func serialize<Buffer>(
         ascii timestamp: RFC_2822.Timestamp,
         into buffer: inout Buffer
-    ) where Buffer : RangeReplaceableCollection, Buffer.Element == UInt8 {
+    ) where Buffer: RangeReplaceableCollection, Buffer.Element == UInt8 {
         buffer.append(contentsOf: "\(timestamp.secondsSinceEpoch)".utf8)
     }
 
@@ -75,11 +75,13 @@ extension RFC_2822.Timestamp: UInt8.ASCII.Serializable {
 
         // Strip leading/trailing whitespace
         while !byteArray.isEmpty
-            && (byteArray.first == .ascii.space || byteArray.first == .ascii.htab) {
+            && (byteArray.first == .ascii.space || byteArray.first == .ascii.htab)
+        {
             byteArray.removeFirst()
         }
         while !byteArray.isEmpty
-            && (byteArray.last == .ascii.space || byteArray.last == .ascii.htab) {
+            && (byteArray.last == .ascii.space || byteArray.last == .ascii.htab)
+        {
             byteArray.removeLast()
         }
 

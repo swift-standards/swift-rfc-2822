@@ -23,7 +23,7 @@ let package = Package(
         .library(name: .rfc2822.foundation, targets: [.rfc2822.foundation]),
     ],
     dependencies: [
-        .package(url: "https://github.com/swift-standards/swift-incits-4-1986", from: "0.5.0"),
+        .package(url: "https://github.com/swift-standards/swift-incits-4-1986", from: "0.6.0"),
     ],
     targets: [
         .target(

@@ -65,7 +65,6 @@ extension RFC_2822.Message {
 // MARK: - UInt8.ASCII.Serializable
 
 extension RFC_2822.Message: UInt8.ASCII.Serializable {
-    
 
     /// Errors during message parsing
     public enum Error: Swift.Error, Sendable, Equatable, CustomStringConvertible {
@@ -81,12 +80,12 @@ extension RFC_2822.Message: UInt8.ASCII.Serializable {
             }
         }
     }
-    
+
     static public func serialize<Buffer>(
         ascii message: RFC_2822.Message,
         into buffer: inout Buffer
-    ) where Buffer : RangeReplaceableCollection, Buffer.Element == UInt8 {
-        
+    ) where Buffer: RangeReplaceableCollection, Buffer.Element == UInt8 {
+
         // Serialize fields
         buffer.append(ascii: message.fields)
 
@@ -128,7 +127,8 @@ extension RFC_2822.Message: UInt8.ASCII.Serializable {
         // Look for CRLF CRLF
         for i in 0..<(byteArray.count - 3) {
             if byteArray[i] == .ascii.cr && byteArray[i + 1] == .ascii.lf
-                && byteArray[i + 2] == .ascii.cr && byteArray[i + 3] == .ascii.lf {
+                && byteArray[i + 2] == .ascii.cr && byteArray[i + 3] == .ascii.lf
+            {
                 headerEndIndex = i
                 bodyStartIndex = i + 4
                 break

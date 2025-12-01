@@ -53,8 +53,8 @@ extension RFC_2822.Message.Received: UInt8.ASCII.Serializable {
     static public func serialize<Buffer>(
         ascii received: RFC_2822.Message.Received,
         into buffer: inout Buffer
-    ) where Buffer : RangeReplaceableCollection, Buffer.Element == UInt8 {
-        
+    ) where Buffer: RangeReplaceableCollection, Buffer.Element == UInt8 {
+
         // Add name-value pairs
         for (index, token) in received.tokens.enumerated() {
             if index > 0 {
@@ -112,7 +112,8 @@ extension RFC_2822.Message.Received: UInt8.ASCII.Serializable {
 
         // Strip leading whitespace from timestamp
         while !timestampBytes.isEmpty
-            && (timestampBytes.first == .ascii.space || timestampBytes.first == .ascii.htab) {
+            && (timestampBytes.first == .ascii.space || timestampBytes.first == .ascii.htab)
+        {
             timestampBytes.removeFirst()
         }
 

@@ -92,8 +92,8 @@ extension RFC_2822.Message.ResentBlock: UInt8.ASCII.Serializable {
     static public func serialize<Buffer>(
         ascii block: RFC_2822.Message.ResentBlock,
         into buffer: inout Buffer
-    ) where Buffer : RangeReplaceableCollection, Buffer.Element == UInt8 {
-        
+    ) where Buffer: RangeReplaceableCollection, Buffer.Element == UInt8 {
+
         // Helper to add a field line
         func addField(_ name: String, _ value: String) {
             buffer.append(contentsOf: name.utf8)

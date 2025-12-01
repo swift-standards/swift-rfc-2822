@@ -61,7 +61,7 @@ extension RFC_2822.Address: UInt8.ASCII.Serializable {
     public static func serialize<Buffer>(
         ascii address: RFC_2822.Address,
         into buffer: inout Buffer
-    ) where Buffer : RangeReplaceableCollection, Buffer.Element == UInt8 {
+    ) where Buffer: RangeReplaceableCollection, Buffer.Element == UInt8 {
         switch address.kind {
         case .mailbox(let mailbox):
             buffer.append(ascii: mailbox)
@@ -150,18 +150,21 @@ extension RFC_2822.Address: UInt8.ASCII.Serializable {
             // Extract display name (everything before :) and trim whitespace
             var displayNameBytes = Array(byteArray[..<colonIdx])
             while !displayNameBytes.isEmpty
-                && (displayNameBytes.first == .ascii.space || displayNameBytes.first == .ascii.htab) {
+                && (displayNameBytes.first == .ascii.space || displayNameBytes.first == .ascii.htab)
+            {
                 displayNameBytes.removeFirst()
             }
             while !displayNameBytes.isEmpty
-                && (displayNameBytes.last == .ascii.space || displayNameBytes.last == .ascii.htab) {
+                && (displayNameBytes.last == .ascii.space || displayNameBytes.last == .ascii.htab)
+            {
                 displayNameBytes.removeLast()
             }
 
             var displayName: String
             // Remove quotes if present
             if !displayNameBytes.isEmpty && displayNameBytes.first == .ascii.quotationMark
-                && displayNameBytes.last == .ascii.quotationMark {
+                && displayNameBytes.last == .ascii.quotationMark
+            {
                 displayName = String(
                     decoding: displayNameBytes[1..<(displayNameBytes.count - 1)],
                     as: UTF8.self
@@ -197,11 +200,13 @@ extension RFC_2822.Address: UInt8.ASCII.Serializable {
                         // End of this mailbox - trim whitespace
                         var trimmed = currentMailbox
                         while !trimmed.isEmpty
-                            && (trimmed.first == .ascii.space || trimmed.first == .ascii.htab) {
+                            && (trimmed.first == .ascii.space || trimmed.first == .ascii.htab)
+                        {
                             trimmed.removeFirst()
                         }
                         while !trimmed.isEmpty
-                            && (trimmed.last == .ascii.space || trimmed.last == .ascii.htab) {
+                            && (trimmed.last == .ascii.space || trimmed.last == .ascii.htab)
+                        {
                             trimmed.removeLast()
                         }
                         if !trimmed.isEmpty {
@@ -221,11 +226,13 @@ extension RFC_2822.Address: UInt8.ASCII.Serializable {
                 // Don't forget the last mailbox - trim whitespace
                 var trimmed = currentMailbox
                 while !trimmed.isEmpty
-                    && (trimmed.first == .ascii.space || trimmed.first == .ascii.htab) {
+                    && (trimmed.first == .ascii.space || trimmed.first == .ascii.htab)
+                {
                     trimmed.removeFirst()
                 }
                 while !trimmed.isEmpty
-                    && (trimmed.last == .ascii.space || trimmed.last == .ascii.htab) {
+                    && (trimmed.last == .ascii.space || trimmed.last == .ascii.htab)
+                {
                     trimmed.removeLast()
                 }
                 if !trimmed.isEmpty {

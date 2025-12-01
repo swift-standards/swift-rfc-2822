@@ -66,7 +66,7 @@ extension RFC_2822.Message.ID: UInt8.ASCII.Serializable {
     static public func serialize<Buffer>(
         ascii id: RFC_2822.Message.ID,
         into buffer: inout Buffer
-    ) where Buffer : RangeReplaceableCollection, Buffer.Element == UInt8 {
+    ) where Buffer: RangeReplaceableCollection, Buffer.Element == UInt8 {
         buffer.reserveCapacity(id.idLeft.count + id.idRight.count + 3)
 
         buffer.append(.ascii.lessThanSign)
@@ -96,11 +96,13 @@ extension RFC_2822.Message.ID: UInt8.ASCII.Serializable {
 
         // Strip leading/trailing whitespace (CFWS)
         while !byteArray.isEmpty
-            && (byteArray.first == .ascii.space || byteArray.first == .ascii.htab) {
+            && (byteArray.first == .ascii.space || byteArray.first == .ascii.htab)
+        {
             byteArray.removeFirst()
         }
         while !byteArray.isEmpty
-            && (byteArray.last == .ascii.space || byteArray.last == .ascii.htab) {
+            && (byteArray.last == .ascii.space || byteArray.last == .ascii.htab)
+        {
             byteArray.removeLast()
         }
 
@@ -208,7 +210,8 @@ extension RFC_2822.Message.ID: UInt8.ASCII.Serializable {
         let firstRightByte = idRightBytes[0]
         let lastRightByte = idRightBytes[idRightBytes.count - 1]
 
-        if firstRightByte == .ascii.leftSquareBracket && lastRightByte == .ascii.rightSquareBracket {
+        if firstRightByte == .ascii.leftSquareBracket && lastRightByte == .ascii.rightSquareBracket
+        {
             // no-fold-literal: "[" *dtext "]"
             for i in 1..<(idRightBytes.count - 1) {
                 let byte = idRightBytes[i]
