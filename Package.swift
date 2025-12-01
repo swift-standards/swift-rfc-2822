@@ -20,6 +20,7 @@ let package = Package(
     ],
     products: [
         .library(name: .rfc2822, targets: [.rfc2822]),
+        .library(name: .rfc2822.foundation, targets: [.rfc2822.foundation]),
     ],
     dependencies: [
         .package(url: "https://github.com/swift-standards/swift-incits-4-1986", from: "0.5.0"),
@@ -37,6 +38,18 @@ let package = Package(
                 .rfc2822
             ]
         ),
+        .target(
+            name: .rfc2822.foundation,
+            dependencies: [
+                .rfc2822
+            ]
+        ),
+        .testTarget(
+            name: .rfc2822.foundation.tests,
+            dependencies: [
+                .byName(name: .rfc2822.foundation)
+            ]
+        ),
     ],
     swiftLanguageModes: [.v6]
 )
@@ -48,9 +61,10 @@ extension String {
 
 for target in package.targets where ![.system, .binary, .plugin].contains(target.type) {
     let existing = target.swiftSettings ?? []
-    target.swiftSettings = existing + [
+    target.swiftSettings =
+    existing + [
         .enableUpcomingFeature("ExistentialAny"),
         .enableUpcomingFeature("InternalImportsByDefault"),
-        .enableUpcomingFeature("MemberImportVisibility")
+        .enableUpcomingFeature("MemberImportVisibility"),
     ]
 }

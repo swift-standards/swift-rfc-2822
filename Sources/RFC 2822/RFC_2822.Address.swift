@@ -58,7 +58,32 @@ extension RFC_2822.Address: Hashable {}
 // MARK: - UInt8.ASCII.Serializable
 
 extension RFC_2822.Address: UInt8.ASCII.Serializable {
-    public static let serialize: @Sendable (Self) -> [UInt8] = [UInt8].init
+    public static func serialize<Buffer>(
+        ascii address: RFC_2822.Address,
+        into buffer: inout Buffer
+    ) where Buffer : RangeReplaceableCollection, Buffer.Element == UInt8 {
+        switch address.kind {
+        case .mailbox(let mailbox):
+            buffer.append(ascii: mailbox)
+
+        case .group(let displayName, let mailboxes):
+            // Group format: "Display Name: mailbox1, mailbox2;"
+            buffer.append(utf8: displayName)
+            buffer.append(.ascii.colon)
+
+            for (index, mailbox) in mailboxes.enumerated() {
+                if index > 0 {
+                    buffer.append(.ascii.comma)
+                    buffer.append(.ascii.space)
+                } else {
+                    buffer.append(.ascii.space)
+                }
+                buffer.append(ascii: mailbox)
+            }
+
+            buffer.append(.ascii.semicolon)
+        }
+    }
 
     /// Errors during address parsing
     public enum Error: Swift.Error, Sendable, Equatable, CustomStringConvertible {
@@ -232,56 +257,4 @@ extension RFC_2822.Address: UInt8.ASCII.RawRepresentable {
     public typealias RawValue = String
 }
 
-extension RFC_2822.Address: CustomStringConvertible {
-    public var description: String {
-        String(self)
-    }
-}
-
-// MARK: - [UInt8] Conversion
-
-extension [UInt8] {
-    /// Creates byte representation of RFC 2822 Address
-    ///
-    /// ## Category Theory
-    ///
-    /// Natural transformation: RFC_2822.Address → [UInt8]
-    ///
-    /// - Parameter address: The address to serialize
-    public init(_ address: RFC_2822.Address) {
-        self = []
-
-        switch address.kind {
-        case .mailbox(let mailbox):
-            self.append(contentsOf: [UInt8](mailbox))
-
-        case .group(let displayName, let mailboxes):
-            // Group format: "Display Name: mailbox1, mailbox2;"
-            self.append(contentsOf: displayName.utf8)
-            self.append(.ascii.colon)
-
-            for (index, mailbox) in mailboxes.enumerated() {
-                if index > 0 {
-                    self.append(.ascii.comma)
-                    self.append(.ascii.space)
-                } else {
-                    self.append(.ascii.space)
-                }
-                self.append(contentsOf: [UInt8](mailbox))
-            }
-
-            self.append(.ascii.semicolon)
-        }
-    }
-}
-
-// MARK: - StringProtocol Conversion
-
-extension StringProtocol {
-    /// Create a string from an RFC 2822 Address
-    ///
-    /// - Parameter address: The address to convert
-    public init(_ address: RFC_2822.Address) {
-        self = Self(decoding: address.bytes, as: UTF8.self)
-    }
-}
+extension RFC_2822.Address: CustomStringConvertible {}

@@ -53,7 +53,12 @@ extension RFC_2822.Timestamp: Hashable {}
 // MARK: - UInt8.ASCII.Serializable
 
 extension RFC_2822.Timestamp: UInt8.ASCII.Serializable {
-    public static let serialize: @Sendable (Self) -> [UInt8] = [UInt8].init
+    static public func serialize<Buffer>(
+        ascii timestamp: RFC_2822.Timestamp,
+        into buffer: inout Buffer
+    ) where Buffer : RangeReplaceableCollection, Buffer.Element == UInt8 {
+        buffer.append(contentsOf: "\(timestamp.secondsSinceEpoch)".utf8)
+    }
 
     /// Parses a timestamp from ASCII bytes (AUTHORITATIVE IMPLEMENTATION)
     ///
@@ -96,38 +101,4 @@ extension RFC_2822.Timestamp: UInt8.ASCII.RawRepresentable {
     public typealias RawValue = String
 }
 
-extension RFC_2822.Timestamp: CustomStringConvertible {
-    public var description: String {
-        String(self)
-    }
-}
-
-// MARK: - [UInt8] Conversion
-
-extension [UInt8] {
-    /// Creates byte representation of RFC 2822 Timestamp
-    ///
-    /// Serializes as seconds since epoch in decimal ASCII.
-    /// Full RFC 2822 date-time formatting would require Date/Calendar APIs.
-    ///
-    /// ## Category Theory
-    ///
-    /// Natural transformation: RFC_2822.Timestamp → [UInt8]
-    ///
-    /// - Parameter timestamp: The timestamp to serialize
-    public init(_ timestamp: RFC_2822.Timestamp) {
-        self = []
-        self.append(contentsOf: "\(timestamp.secondsSinceEpoch)".utf8)
-    }
-}
-
-// MARK: - StringProtocol Conversion
-
-extension StringProtocol {
-    /// Create a string from an RFC 2822 Timestamp
-    ///
-    /// - Parameter timestamp: The timestamp to convert
-    public init(_ timestamp: RFC_2822.Timestamp) {
-        self = Self(decoding: timestamp.bytes, as: UTF8.self)
-    }
-}
+extension RFC_2822.Timestamp: CustomStringConvertible {}

@@ -89,7 +89,52 @@ extension RFC_2822.Message {
 // MARK: - UInt8.ASCII.Serializable
 
 extension RFC_2822.Message.ResentBlock: UInt8.ASCII.Serializable {
-    public static let serialize: @Sendable (Self) -> [UInt8] = [UInt8].init
+    static public func serialize<Buffer>(
+        ascii block: RFC_2822.Message.ResentBlock,
+        into buffer: inout Buffer
+    ) where Buffer : RangeReplaceableCollection, Buffer.Element == UInt8 {
+        
+        // Helper to add a field line
+        func addField(_ name: String, _ value: String) {
+            buffer.append(contentsOf: name.utf8)
+            buffer.append(.ascii.colon)
+            buffer.append(.ascii.space)
+            buffer.append(contentsOf: value.utf8)
+            buffer.append(.ascii.cr)
+            buffer.append(.ascii.lf)
+        }
+
+        // Resent-Date (required)
+        addField("Resent-Date", "\(block.timestamp.secondsSinceEpoch)")
+
+        // Resent-From (required)
+        addField("Resent-From", block.from.map { String(describing: $0) }.joined(separator: ", "))
+
+        // Resent-Sender (optional)
+        if let sender = block.sender {
+            addField("Resent-Sender", String(describing: sender))
+        }
+
+        // Resent-To (optional)
+        if let to = block.to {
+            addField("Resent-To", to.map { String(describing: $0) }.joined(separator: ", "))
+        }
+
+        // Resent-Cc (optional)
+        if let cc = block.cc {
+            addField("Resent-Cc", cc.map { String(describing: $0) }.joined(separator: ", "))
+        }
+
+        // Resent-Bcc (optional)
+        if let bcc = block.bcc {
+            addField("Resent-Bcc", bcc.map { String(describing: $0) }.joined(separator: ", "))
+        }
+
+        // Resent-Message-ID (optional)
+        if let messageID = block.messageID {
+            addField("Resent-Message-ID", messageID.description)
+        }
+    }
 
     /// Parses a resent block from ASCII bytes (AUTHORITATIVE IMPLEMENTATION)
     ///
@@ -266,77 +311,4 @@ extension RFC_2822.Message.ResentBlock: UInt8.ASCII.RawRepresentable {
     public typealias RawValue = String
 }
 
-extension RFC_2822.Message.ResentBlock: CustomStringConvertible {
-    public var description: String {
-        String(self)
-    }
-}
-
-// MARK: - [UInt8] Conversion
-
-extension [UInt8] {
-    /// Creates byte representation of RFC 2822 Resent Block
-    ///
-    /// Formats as a series of Resent-* header fields.
-    ///
-    /// ## Category Theory
-    ///
-    /// Natural transformation: RFC_2822.Message.ResentBlock → [UInt8]
-    ///
-    /// - Parameter block: The resent block to serialize
-    public init(_ block: RFC_2822.Message.ResentBlock) {
-        self = []
-
-        // Helper to add a field line
-        func addField(_ name: String, _ value: String) {
-            self.append(contentsOf: name.utf8)
-            self.append(.ascii.colon)
-            self.append(.ascii.space)
-            self.append(contentsOf: value.utf8)
-            self.append(.ascii.cr)
-            self.append(.ascii.lf)
-        }
-
-        // Resent-Date (required)
-        addField("Resent-Date", "\(block.timestamp.secondsSinceEpoch)")
-
-        // Resent-From (required)
-        addField("Resent-From", block.from.map { String(describing: $0) }.joined(separator: ", "))
-
-        // Resent-Sender (optional)
-        if let sender = block.sender {
-            addField("Resent-Sender", String(describing: sender))
-        }
-
-        // Resent-To (optional)
-        if let to = block.to {
-            addField("Resent-To", to.map { String(describing: $0) }.joined(separator: ", "))
-        }
-
-        // Resent-Cc (optional)
-        if let cc = block.cc {
-            addField("Resent-Cc", cc.map { String(describing: $0) }.joined(separator: ", "))
-        }
-
-        // Resent-Bcc (optional)
-        if let bcc = block.bcc {
-            addField("Resent-Bcc", bcc.map { String(describing: $0) }.joined(separator: ", "))
-        }
-
-        // Resent-Message-ID (optional)
-        if let messageID = block.messageID {
-            addField("Resent-Message-ID", messageID.description)
-        }
-    }
-}
-
-// MARK: - StringProtocol Conversion
-
-extension StringProtocol {
-    /// Create a string from an RFC 2822 Resent Block
-    ///
-    /// - Parameter block: The resent block to convert
-    public init(_ block: RFC_2822.Message.ResentBlock) {
-        self = Self(decoding: block.bytes, as: UTF8.self)
-    }
-}
+extension RFC_2822.Message.ResentBlock: CustomStringConvertible {}

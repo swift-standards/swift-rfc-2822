@@ -50,7 +50,18 @@ extension RFC_2822.Message.Received {
 // MARK: - UInt8.ASCII.Serializable
 
 extension RFC_2822.Message.Received.NameValuePair: UInt8.ASCII.Serializable {
-    public static let serialize: @Sendable (Self) -> [UInt8] = [UInt8].init
+    static public func serialize<Buffer>(
+        ascii pair: RFC_2822.Message.Received.NameValuePair,
+        into buffer: inout Buffer
+    ) where Buffer : RangeReplaceableCollection, Buffer.Element == UInt8 {
+        buffer.reserveCapacity(pair.name.count + 1 + pair.value.count)
+
+        buffer.append(contentsOf: pair.name.utf8)
+        if !pair.value.isEmpty {
+            buffer.append(.ascii.space)
+            buffer.append(contentsOf: pair.value.utf8)
+        }
+    }
 
     /// Parses a name-value pair from ASCII bytes (AUTHORITATIVE IMPLEMENTATION)
     ///
@@ -137,43 +148,4 @@ extension RFC_2822.Message.Received.NameValuePair: UInt8.ASCII.RawRepresentable 
     public typealias RawValue = String
 }
 
-extension RFC_2822.Message.Received.NameValuePair: CustomStringConvertible {
-    public var description: String {
-        String(self)
-    }
-}
-
-// MARK: - [UInt8] Conversion
-
-extension [UInt8] {
-    /// Creates byte representation of Received field name-value pair
-    ///
-    /// Formats as "name value".
-    ///
-    /// ## Category Theory
-    ///
-    /// Natural transformation: RFC_2822.Message.Received.NameValuePair → [UInt8]
-    ///
-    /// - Parameter pair: The name-value pair to serialize
-    public init(_ pair: RFC_2822.Message.Received.NameValuePair) {
-        self = []
-        self.reserveCapacity(pair.name.count + 1 + pair.value.count)
-
-        self.append(contentsOf: pair.name.utf8)
-        if !pair.value.isEmpty {
-            self.append(.ascii.space)
-            self.append(contentsOf: pair.value.utf8)
-        }
-    }
-}
-
-// MARK: - StringProtocol Conversion
-
-extension StringProtocol {
-    /// Create a string from an RFC 2822 Received name-value pair
-    ///
-    /// - Parameter pair: The name-value pair to convert
-    public init(_ pair: RFC_2822.Message.Received.NameValuePair) {
-        self = Self(decoding: pair.bytes, as: UTF8.self)
-    }
-}
+extension RFC_2822.Message.Received.NameValuePair: CustomStringConvertible {}

@@ -54,7 +54,10 @@ extension RFC_2822.Message: Hashable {}
 
 extension RFC_2822.Message {
     /// Convenience initializer with string body
-    public init(fields: RFC_2822.Fields, body: String?) {
+    public init(
+        fields: RFC_2822.Fields,
+        body: String?
+    ) {
         self.init(__unchecked: (), fields: fields, body: body.map { Body($0) })
     }
 }
@@ -62,7 +65,7 @@ extension RFC_2822.Message {
 // MARK: - UInt8.ASCII.Serializable
 
 extension RFC_2822.Message: UInt8.ASCII.Serializable {
-    public static let serialize: @Sendable (Self) -> [UInt8] = [UInt8].init
+    
 
     /// Errors during message parsing
     public enum Error: Swift.Error, Sendable, Equatable, CustomStringConvertible {
@@ -76,6 +79,27 @@ extension RFC_2822.Message: UInt8.ASCII.Serializable {
             case .invalidFields(let error):
                 return "Invalid fields: \(error)"
             }
+        }
+    }
+    
+    static public func serialize<Buffer>(
+        ascii message: RFC_2822.Message,
+        into buffer: inout Buffer
+    ) where Buffer : RangeReplaceableCollection, Buffer.Element == UInt8 {
+        
+        // Serialize fields
+        buffer.append(ascii: message.fields)
+
+        // Add body if present
+        if let body = message.body {
+            // CRLF CRLF separator between headers and body
+            buffer.append(.ascii.cr)
+            buffer.append(.ascii.lf)
+            buffer.append(.ascii.cr)
+            buffer.append(.ascii.lf)
+
+            // Body bytes
+            buffer.append(contentsOf: body.bytes)
         }
     }
 
@@ -162,59 +186,4 @@ extension RFC_2822.Message: UInt8.ASCII.RawRepresentable {
 
 // MARK: - CustomStringConvertible
 
-extension RFC_2822.Message: CustomStringConvertible {
-    public var description: String {
-        String(self)
-    }
-}
-
-// MARK: - [UInt8] Conversion
-
-extension [UInt8] {
-    /// Creates byte representation of RFC 2822 Message
-    ///
-    /// This is the canonical serialization for RFC 2822 messages.
-    ///
-    /// ## RFC 2822 Message Format
-    ///
-    /// ```
-    /// message = fields CRLF CRLF body
-    /// ```
-    ///
-    /// ## Category Theory
-    ///
-    /// This is the canonical serialization (natural transformation):
-    /// - **Domain**: RFC_2822.Message (structured data)
-    /// - **Codomain**: [UInt8] (bytes)
-    ///
-    /// - Parameter message: The RFC 2822 message to serialize
-    public init(_ message: RFC_2822.Message) {
-        self = []
-
-        // Serialize fields
-        self.append(contentsOf: [UInt8](message.fields))
-
-        // Add body if present
-        if let body = message.body {
-            // CRLF CRLF separator between headers and body
-            self.append(.ascii.cr)
-            self.append(.ascii.lf)
-            self.append(.ascii.cr)
-            self.append(.ascii.lf)
-
-            // Body bytes
-            self.append(contentsOf: body.bytes)
-        }
-    }
-}
-
-// MARK: - StringProtocol Conversion
-
-extension StringProtocol {
-    /// Create a string from an RFC 2822 Message
-    ///
-    /// - Parameter message: The message to convert
-    public init(_ message: RFC_2822.Message) {
-        self = Self(decoding: message.bytes, as: UTF8.self)
-    }
-}
+extension RFC_2822.Message: CustomStringConvertible {}

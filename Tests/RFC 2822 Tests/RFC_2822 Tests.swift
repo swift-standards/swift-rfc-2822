@@ -460,14 +460,13 @@ struct TimestampTests {
 @Suite("RFC 2822 Fields Tests")
 struct FieldsTests {
     @Test("Successfully creates fields with required fields")
-    func testFieldsCreation() {
+    func testFieldsCreation() throws {
         let fields = RFC_2822.Fields(
             originationDate: RFC_2822.Timestamp(secondsSinceEpoch: 1_234_567_890),
             from: [
                 RFC_2822.Mailbox(
                     displayName: nil,
-                    emailAddress: RFC_2822.AddrSpec(
-                        __unchecked: (),
+                    emailAddress: try RFC_2822.AddrSpec(
                         localPart: "sender",
                         domain: "example.com"
                     )
@@ -479,14 +478,13 @@ struct FieldsTests {
     }
 
     @Test("Successfully creates fields with optional fields")
-    func testFieldsWithOptionalFields() {
+    func testFieldsWithOptionalFields() throws {
         let fields = RFC_2822.Fields(
             originationDate: RFC_2822.Timestamp(secondsSinceEpoch: 1_234_567_890),
             from: [
                 RFC_2822.Mailbox(
                     displayName: "Sender",
-                    emailAddress: RFC_2822.AddrSpec(
-                        __unchecked: (),
+                    emailAddress: try RFC_2822.AddrSpec(
                         localPart: "sender",
                         domain: "example.com"
                     )
@@ -531,14 +529,13 @@ struct FieldsTests {
     }
 
     @Test("Successfully tests equality")
-    func testEquality() {
+    func testEquality() throws {
         let f1 = RFC_2822.Fields(
             originationDate: RFC_2822.Timestamp(secondsSinceEpoch: 1000),
             from: [
                 RFC_2822.Mailbox(
                     displayName: nil,
-                    emailAddress: RFC_2822.AddrSpec(
-                        __unchecked: (),
+                    emailAddress: try RFC_2822.AddrSpec(
                         localPart: "a",
                         domain: "b.com"
                     )
@@ -550,8 +547,7 @@ struct FieldsTests {
             from: [
                 RFC_2822.Mailbox(
                     displayName: nil,
-                    emailAddress: RFC_2822.AddrSpec(
-                        __unchecked: (),
+                    emailAddress: try RFC_2822.AddrSpec(
                         localPart: "a",
                         domain: "b.com"
                     )
@@ -568,8 +564,7 @@ struct FieldsTests {
             from: [
                 RFC_2822.Mailbox(
                     displayName: nil,
-                    emailAddress: RFC_2822.AddrSpec(
-                        __unchecked: (),
+                    emailAddress: try RFC_2822.AddrSpec(
                         localPart: "test",
                         domain: "example.com"
                     )
@@ -588,14 +583,13 @@ struct FieldsTests {
 @Suite("RFC 2822 Message Tests")
 struct MessageTests {
     @Test("Successfully creates message with fields only")
-    func testMessageFieldsOnly() {
+    func testMessageFieldsOnly() throws {
         let fields = RFC_2822.Fields(
             originationDate: RFC_2822.Timestamp(secondsSinceEpoch: 1_234_567_890),
             from: [
                 RFC_2822.Mailbox(
                     displayName: nil,
-                    emailAddress: RFC_2822.AddrSpec(
-                        __unchecked: (),
+                    emailAddress: try RFC_2822.AddrSpec(
                         localPart: "sender",
                         domain: "example.com"
                     )
@@ -607,14 +601,13 @@ struct MessageTests {
     }
 
     @Test("Successfully creates message with body")
-    func testMessageWithBody() {
+    func testMessageWithBody() throws {
         let fields = RFC_2822.Fields(
             originationDate: RFC_2822.Timestamp(secondsSinceEpoch: 1_234_567_890),
             from: [
                 RFC_2822.Mailbox(
                     displayName: nil,
-                    emailAddress: RFC_2822.AddrSpec(
-                        __unchecked: (),
+                    emailAddress: try RFC_2822.AddrSpec(
                         localPart: "sender",
                         domain: "example.com"
                     )
@@ -649,14 +642,13 @@ struct MessageTests {
     }
 
     @Test("Successfully tests equality")
-    func testEquality() {
+    func testEquality() throws {
         let fields = RFC_2822.Fields(
             originationDate: RFC_2822.Timestamp(secondsSinceEpoch: 1000),
             from: [
                 RFC_2822.Mailbox(
                     displayName: nil,
-                    emailAddress: RFC_2822.AddrSpec(
-                        __unchecked: (),
+                    emailAddress: try RFC_2822.AddrSpec(
                         localPart: "a",
                         domain: "b.com"
                     )
@@ -675,8 +667,7 @@ struct MessageTests {
             from: [
                 RFC_2822.Mailbox(
                     displayName: nil,
-                    emailAddress: RFC_2822.AddrSpec(
-                        __unchecked: (),
+                    emailAddress: try RFC_2822.AddrSpec(
                         localPart: "test",
                         domain: "example.com"
                     )

@@ -146,7 +146,97 @@ extension RFC_2822.Fields: Hashable {}
 // MARK: - UInt8.ASCII.Serializable
 
 extension RFC_2822.Fields: UInt8.ASCII.Serializable {
-    public static let serialize: @Sendable (Self) -> [UInt8] = [UInt8].init
+    static public func serialize<Buffer>(
+        ascii fields: RFC_2822.Fields,
+        into buffer: inout Buffer
+    ) where Buffer : RangeReplaceableCollection, Buffer.Element == UInt8 {
+        // Helper to add a field line
+        func addField(_ name: String, _ value: String) {
+            buffer.append(contentsOf: name.utf8)
+            buffer.append(.ascii.colon)
+            buffer.append(.ascii.space)
+            buffer.append(contentsOf: value.utf8)
+            buffer.append(.ascii.cr)
+            buffer.append(.ascii.lf)
+        }
+
+        // Add fields in recommended order per RFC 2822
+
+        // Trace fields first
+        for received in fields.receivedFields {
+            addField("Received", "\(received)")
+        }
+
+        if let returnPath = fields.returnPath {
+            addField("Return-Path", "\(returnPath)")
+        }
+
+        // Resent fields
+        for block in fields.resentFields {
+            addField("Resent-Date", "\(block.timestamp.secondsSinceEpoch)")
+            addField(
+                "Resent-From",
+                block.from.map { String(describing: $0) }.joined(separator: ", ")
+            )
+            if let sender = block.sender {
+                addField("Resent-Sender", String(describing: sender))
+            }
+            if let to = block.to {
+                addField("Resent-To", to.map { String(describing: $0) }.joined(separator: ", "))
+            }
+            if let cc = block.cc {
+                addField("Resent-Cc", cc.map { String(describing: $0) }.joined(separator: ", "))
+            }
+            if let messageID = block.messageID {
+                addField("Resent-Message-ID", messageID.description)
+            }
+        }
+
+        // Required fields
+        addField("Date", "\(fields.originationDate.secondsSinceEpoch)")
+        addField("From", fields.from.map { String(describing: $0) }.joined(separator: ", "))
+
+        // Optional originator fields
+        if let sender = fields.sender {
+            addField("Sender", String(describing: sender))
+        }
+        if let replyTo = fields.replyTo {
+            addField("Reply-To", replyTo.map { String(describing: $0) }.joined(separator: ", "))
+        }
+
+        // Destination fields
+        if let to = fields.to {
+            addField("To", to.map { String(describing: $0) }.joined(separator: ", "))
+        }
+        if let cc = fields.cc {
+            addField("Cc", cc.map { String(describing: $0) }.joined(separator: ", "))
+        }
+        if let bcc = fields.bcc {
+            addField("Bcc", bcc.map { String(describing: $0) }.joined(separator: ", "))
+        }
+
+        // Identification fields
+        if let messageID = fields.messageID {
+            addField("Message-ID", messageID.description)
+        }
+        if let inReplyTo = fields.inReplyTo {
+            addField("In-Reply-To", inReplyTo.map(\.description).joined(separator: " "))
+        }
+        if let references = fields.references {
+            addField("References", references.map(\.description).joined(separator: " "))
+        }
+
+        // Informational fields
+        if let subject = fields.subject {
+            addField("Subject", subject)
+        }
+        if let comments = fields.comments {
+            addField("Comments", comments)
+        }
+        if let keywords = fields.keywords {
+            addField("Keywords", keywords.joined(separator: ", "))
+        }
+    }
 
     /// Errors during fields parsing
     public enum Error: Swift.Error, Sendable, Equatable, CustomStringConvertible {
@@ -481,123 +571,4 @@ extension RFC_2822.Fields: UInt8.ASCII.RawRepresentable {
     public typealias RawValue = String
 }
 
-extension RFC_2822.Fields: CustomStringConvertible {
-    public var description: String {
-        String(self)
-    }
-}
-
-// MARK: - [UInt8] Conversion
-
-extension [UInt8] {
-    /// Creates byte representation of RFC 2822 Fields
-    ///
-    /// Serializes all message header fields per RFC 2822 Section 3.6.
-    ///
-    /// ## Category Theory
-    ///
-    /// Natural transformation: RFC_2822.Fields → [UInt8]
-    ///
-    /// - Parameter fields: The message fields to serialize
-    public init(_ fields: RFC_2822.Fields) {
-        self = []
-
-        // Helper to add a field line
-        func addField(_ name: String, _ value: String) {
-            self.append(contentsOf: name.utf8)
-            self.append(.ascii.colon)
-            self.append(.ascii.space)
-            self.append(contentsOf: value.utf8)
-            self.append(.ascii.cr)
-            self.append(.ascii.lf)
-        }
-
-        // Add fields in recommended order per RFC 2822
-
-        // Trace fields first
-        for received in fields.receivedFields {
-            addField("Received", "\(received)")
-        }
-
-        if let returnPath = fields.returnPath {
-            addField("Return-Path", "\(returnPath)")
-        }
-
-        // Resent fields
-        for block in fields.resentFields {
-            addField("Resent-Date", "\(block.timestamp.secondsSinceEpoch)")
-            addField(
-                "Resent-From",
-                block.from.map { String(describing: $0) }.joined(separator: ", ")
-            )
-            if let sender = block.sender {
-                addField("Resent-Sender", String(describing: sender))
-            }
-            if let to = block.to {
-                addField("Resent-To", to.map { String(describing: $0) }.joined(separator: ", "))
-            }
-            if let cc = block.cc {
-                addField("Resent-Cc", cc.map { String(describing: $0) }.joined(separator: ", "))
-            }
-            if let messageID = block.messageID {
-                addField("Resent-Message-ID", messageID.description)
-            }
-        }
-
-        // Required fields
-        addField("Date", "\(fields.originationDate.secondsSinceEpoch)")
-        addField("From", fields.from.map { String(describing: $0) }.joined(separator: ", "))
-
-        // Optional originator fields
-        if let sender = fields.sender {
-            addField("Sender", String(describing: sender))
-        }
-        if let replyTo = fields.replyTo {
-            addField("Reply-To", replyTo.map { String(describing: $0) }.joined(separator: ", "))
-        }
-
-        // Destination fields
-        if let to = fields.to {
-            addField("To", to.map { String(describing: $0) }.joined(separator: ", "))
-        }
-        if let cc = fields.cc {
-            addField("Cc", cc.map { String(describing: $0) }.joined(separator: ", "))
-        }
-        if let bcc = fields.bcc {
-            addField("Bcc", bcc.map { String(describing: $0) }.joined(separator: ", "))
-        }
-
-        // Identification fields
-        if let messageID = fields.messageID {
-            addField("Message-ID", messageID.description)
-        }
-        if let inReplyTo = fields.inReplyTo {
-            addField("In-Reply-To", inReplyTo.map(\.description).joined(separator: " "))
-        }
-        if let references = fields.references {
-            addField("References", references.map(\.description).joined(separator: " "))
-        }
-
-        // Informational fields
-        if let subject = fields.subject {
-            addField("Subject", subject)
-        }
-        if let comments = fields.comments {
-            addField("Comments", comments)
-        }
-        if let keywords = fields.keywords {
-            addField("Keywords", keywords.joined(separator: ", "))
-        }
-    }
-}
-
-// MARK: - StringProtocol Conversion
-
-extension StringProtocol {
-    /// Create a string from RFC 2822 Fields
-    ///
-    /// - Parameter fields: The fields to convert
-    public init(_ fields: RFC_2822.Fields) {
-        self = Self(decoding: fields.bytes, as: UTF8.self)
-    }
-}
+extension RFC_2822.Fields: CustomStringConvertible {}

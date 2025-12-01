@@ -63,7 +63,18 @@ extension RFC_2822.Message.ID: Hashable {
 // MARK: - UInt8.ASCII.Serializable
 
 extension RFC_2822.Message.ID: UInt8.ASCII.Serializable {
-    public static let serialize: @Sendable (Self) -> [UInt8] = [UInt8].init
+    static public func serialize<Buffer>(
+        ascii id: RFC_2822.Message.ID,
+        into buffer: inout Buffer
+    ) where Buffer : RangeReplaceableCollection, Buffer.Element == UInt8 {
+        buffer.reserveCapacity(id.idLeft.count + id.idRight.count + 3)
+
+        buffer.append(.ascii.lessThanSign)
+        buffer.append(contentsOf: id.idLeft.utf8)
+        buffer.append(.ascii.commercialAt)
+        buffer.append(contentsOf: id.idRight.utf8)
+        buffer.append(.ascii.greaterThanSign)
+    }
 
     /// Parses a message ID from ASCII bytes (AUTHORITATIVE IMPLEMENTATION)
     ///
@@ -264,43 +275,4 @@ extension RFC_2822.Message.ID: UInt8.ASCII.RawRepresentable {
     public typealias RawValue = String
 }
 
-extension RFC_2822.Message.ID: CustomStringConvertible {
-    public var description: String {
-        String(self)
-    }
-}
-
-// MARK: - [UInt8] Conversion
-
-extension [UInt8] {
-    /// Creates byte representation of RFC 2822 Message ID
-    ///
-    /// Formats as `<idLeft@idRight>` per RFC 2822 Section 3.6.4.
-    ///
-    /// ## Category Theory
-    ///
-    /// Natural transformation: RFC_2822.Message.ID → [UInt8]
-    ///
-    /// - Parameter messageID: The message ID to serialize
-    public init(_ messageID: RFC_2822.Message.ID) {
-        self = []
-        self.reserveCapacity(messageID.idLeft.count + messageID.idRight.count + 3)
-
-        self.append(.ascii.lessThanSign)
-        self.append(contentsOf: messageID.idLeft.utf8)
-        self.append(.ascii.commercialAt)
-        self.append(contentsOf: messageID.idRight.utf8)
-        self.append(.ascii.greaterThanSign)
-    }
-}
-
-// MARK: - StringProtocol Conversion
-
-extension StringProtocol {
-    /// Create a string from an RFC 2822 Message ID
-    ///
-    /// - Parameter messageID: The message ID to convert
-    public init(_ messageID: RFC_2822.Message.ID) {
-        self = Self(decoding: messageID.bytes, as: UTF8.self)
-    }
-}
+extension RFC_2822.Message.ID: CustomStringConvertible {}

@@ -50,7 +50,24 @@ extension RFC_2822.Message {
 // MARK: - UInt8.ASCII.Serializable
 
 extension RFC_2822.Message.Received: UInt8.ASCII.Serializable {
-    public static let serialize: @Sendable (Self) -> [UInt8] = [UInt8].init
+    static public func serialize<Buffer>(
+        ascii received: RFC_2822.Message.Received,
+        into buffer: inout Buffer
+    ) where Buffer : RangeReplaceableCollection, Buffer.Element == UInt8 {
+        
+        // Add name-value pairs
+        for (index, token) in received.tokens.enumerated() {
+            if index > 0 {
+                buffer.append(.ascii.space)
+            }
+            buffer.append(contentsOf: [UInt8](token))
+        }
+
+        // Add semicolon and timestamp
+        buffer.append(.ascii.semicolon)
+        buffer.append(.ascii.space)
+        buffer.append(contentsOf: [UInt8](received.timestamp))
+    }
 
     /// Parses a received field from ASCII bytes (AUTHORITATIVE IMPLEMENTATION)
     ///
@@ -158,49 +175,4 @@ extension RFC_2822.Message.Received: UInt8.ASCII.RawRepresentable {
     public typealias RawValue = String
 }
 
-extension RFC_2822.Message.Received: CustomStringConvertible {
-    public var description: String {
-        String(self)
-    }
-}
-
-// MARK: - [UInt8] Conversion
-
-extension [UInt8] {
-    /// Creates byte representation of RFC 2822 Received field
-    ///
-    /// Formats as trace tokens followed by semicolon and timestamp.
-    ///
-    /// ## Category Theory
-    ///
-    /// Natural transformation: RFC_2822.Message.Received → [UInt8]
-    ///
-    /// - Parameter received: The received field to serialize
-    public init(_ received: RFC_2822.Message.Received) {
-        self = []
-
-        // Add name-value pairs
-        for (index, token) in received.tokens.enumerated() {
-            if index > 0 {
-                self.append(.ascii.space)
-            }
-            self.append(contentsOf: [UInt8](token))
-        }
-
-        // Add semicolon and timestamp
-        self.append(.ascii.semicolon)
-        self.append(.ascii.space)
-        self.append(contentsOf: [UInt8](received.timestamp))
-    }
-}
-
-// MARK: - StringProtocol Conversion
-
-extension StringProtocol {
-    /// Create a string from an RFC 2822 Received field
-    ///
-    /// - Parameter received: The received field to convert
-    public init(_ received: RFC_2822.Message.Received) {
-        self = Self(decoding: received.bytes, as: UTF8.self)
-    }
-}
+extension RFC_2822.Message.Received: CustomStringConvertible {}
