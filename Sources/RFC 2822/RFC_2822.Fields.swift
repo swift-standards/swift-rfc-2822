@@ -334,7 +334,8 @@ extension RFC_2822.Fields: Binary.ASCII.Serializable {
 
                 // Check if next line is a continuation (starts with space/tab)
                 if i < byteArray.count
-                    && (byteArray[i] == .ascii.space || byteArray[i] == .ascii.htab) {
+                    && (byteArray[i] == .ascii.space || byteArray[i] == .ascii.htab)
+                {
                     // Folded header - continue current line
                     currentLine.append(.ascii.space)
                     i += 1  // Skip the leading whitespace
@@ -354,7 +355,8 @@ extension RFC_2822.Fields: Binary.ASCII.Serializable {
                 i += 1
 
                 if i < byteArray.count
-                    && (byteArray[i] == .ascii.space || byteArray[i] == .ascii.htab) {
+                    && (byteArray[i] == .ascii.space || byteArray[i] == .ascii.htab)
+                {
                     currentLine.append(.ascii.space)
                     i += 1
                 } else {

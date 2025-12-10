@@ -112,7 +112,8 @@ extension RFC_2822.Message.Received: Binary.ASCII.Serializable {
 
         // Strip leading whitespace from timestamp
         while !timestampBytes.isEmpty
-            && (timestampBytes.first == .ascii.space || timestampBytes.first == .ascii.htab) {
+            && (timestampBytes.first == .ascii.space || timestampBytes.first == .ascii.htab)
+        {
             timestampBytes.removeFirst()
         }
 
