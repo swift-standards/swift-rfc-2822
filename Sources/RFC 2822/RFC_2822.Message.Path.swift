@@ -43,9 +43,9 @@ extension RFC_2822.Message {
     }
 }
 
-// MARK: - UInt8.ASCII.Serializable
+// MARK: - Binary.ASCII.Serializable
 
-extension RFC_2822.Message.Path: UInt8.ASCII.Serializable {
+extension RFC_2822.Message.Path: Binary.ASCII.Serializable {
     static public func serialize<Buffer>(
         ascii path: RFC_2822.Message.Path,
         into buffer: inout Buffer
@@ -87,13 +87,11 @@ extension RFC_2822.Message.Path: UInt8.ASCII.Serializable {
 
         // Strip leading/trailing whitespace (CFWS)
         while !byteArray.isEmpty
-            && (byteArray.first == .ascii.space || byteArray.first == .ascii.htab)
-        {
+            && (byteArray.first == .ascii.space || byteArray.first == .ascii.htab) {
             byteArray.removeFirst()
         }
         while !byteArray.isEmpty
-            && (byteArray.last == .ascii.space || byteArray.last == .ascii.htab)
-        {
+            && (byteArray.last == .ascii.space || byteArray.last == .ascii.htab) {
             byteArray.removeLast()
         }
 
@@ -128,7 +126,7 @@ extension RFC_2822.Message.Path: UInt8.ASCII.Serializable {
 
 // MARK: - Protocol Conformances
 
-extension RFC_2822.Message.Path: UInt8.ASCII.RawRepresentable {
+extension RFC_2822.Message.Path: Binary.ASCII.RawRepresentable {
     public typealias RawValue = String
 }
 

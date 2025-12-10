@@ -89,9 +89,9 @@ extension RFC_2822.AddrSpec: Hashable {
     }
 }
 
-// MARK: - UInt8.ASCII.Serializable
+// MARK: - Binary.ASCII.Serializable
 
-extension RFC_2822.AddrSpec: UInt8.ASCII.Serializable {
+extension RFC_2822.AddrSpec: Binary.ASCII.Serializable {
 
     public static func serialize<Buffer>(
         ascii addrSpec: RFC_2822.AddrSpec,
@@ -371,7 +371,7 @@ extension RFC_2822.AddrSpec {
 
 // MARK: - Protocol Conformances
 
-extension RFC_2822.AddrSpec: UInt8.ASCII.RawRepresentable {
+extension RFC_2822.AddrSpec: Binary.ASCII.RawRepresentable {
     public typealias RawValue = String
 }
 

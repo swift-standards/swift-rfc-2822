@@ -56,9 +56,9 @@ extension RFC_2822.Message {
     }
 }
 
-// MARK: - UInt8.ASCII.Serializable
+// MARK: - Binary.ASCII.Serializable
 
-extension RFC_2822.Message.Body: UInt8.ASCII.Serializable {
+extension RFC_2822.Message.Body: Binary.ASCII.Serializable {
     static public func serialize<Buffer>(
         ascii body: RFC_2822.Message.Body,
         into buffer: inout Buffer
@@ -89,7 +89,7 @@ extension RFC_2822.Message.Body: UInt8.ASCII.Serializable {
 
 // MARK: - Protocol Conformances
 
-extension RFC_2822.Message.Body: UInt8.ASCII.RawRepresentable {
+extension RFC_2822.Message.Body: Binary.ASCII.RawRepresentable {
     public typealias RawValue = String
 }
 

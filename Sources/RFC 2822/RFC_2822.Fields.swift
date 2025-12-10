@@ -143,9 +143,9 @@ extension RFC_2822 {
 
 extension RFC_2822.Fields: Hashable {}
 
-// MARK: - UInt8.ASCII.Serializable
+// MARK: - Binary.ASCII.Serializable
 
-extension RFC_2822.Fields: UInt8.ASCII.Serializable {
+extension RFC_2822.Fields: Binary.ASCII.Serializable {
     static public func serialize<Buffer>(
         ascii fields: RFC_2822.Fields,
         into buffer: inout Buffer
@@ -334,8 +334,7 @@ extension RFC_2822.Fields: UInt8.ASCII.Serializable {
 
                 // Check if next line is a continuation (starts with space/tab)
                 if i < byteArray.count
-                    && (byteArray[i] == .ascii.space || byteArray[i] == .ascii.htab)
-                {
+                    && (byteArray[i] == .ascii.space || byteArray[i] == .ascii.htab) {
                     // Folded header - continue current line
                     currentLine.append(.ascii.space)
                     i += 1  // Skip the leading whitespace
@@ -355,8 +354,7 @@ extension RFC_2822.Fields: UInt8.ASCII.Serializable {
                 i += 1
 
                 if i < byteArray.count
-                    && (byteArray[i] == .ascii.space || byteArray[i] == .ascii.htab)
-                {
+                    && (byteArray[i] == .ascii.space || byteArray[i] == .ascii.htab) {
                     currentLine.append(.ascii.space)
                     i += 1
                 } else {
@@ -569,7 +567,7 @@ extension RFC_2822.Fields: UInt8.ASCII.Serializable {
 
 // MARK: - Protocol Conformances
 
-extension RFC_2822.Fields: UInt8.ASCII.RawRepresentable {
+extension RFC_2822.Fields: Binary.ASCII.RawRepresentable {
     public typealias RawValue = String
 }
 

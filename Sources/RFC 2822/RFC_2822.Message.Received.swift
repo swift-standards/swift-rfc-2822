@@ -47,9 +47,9 @@ extension RFC_2822.Message {
 
 // Note: NameValuePair is defined in RFC_2822.Message.Received.NameValuePair.swift
 
-// MARK: - UInt8.ASCII.Serializable
+// MARK: - Binary.ASCII.Serializable
 
-extension RFC_2822.Message.Received: UInt8.ASCII.Serializable {
+extension RFC_2822.Message.Received: Binary.ASCII.Serializable {
     static public func serialize<Buffer>(
         ascii received: RFC_2822.Message.Received,
         into buffer: inout Buffer
@@ -112,8 +112,7 @@ extension RFC_2822.Message.Received: UInt8.ASCII.Serializable {
 
         // Strip leading whitespace from timestamp
         while !timestampBytes.isEmpty
-            && (timestampBytes.first == .ascii.space || timestampBytes.first == .ascii.htab)
-        {
+            && (timestampBytes.first == .ascii.space || timestampBytes.first == .ascii.htab) {
             timestampBytes.removeFirst()
         }
 
@@ -172,7 +171,7 @@ extension RFC_2822.Message.Received: UInt8.ASCII.Serializable {
 
 // MARK: - Protocol Conformances
 
-extension RFC_2822.Message.Received: UInt8.ASCII.RawRepresentable {
+extension RFC_2822.Message.Received: Binary.ASCII.RawRepresentable {
     public typealias RawValue = String
 }
 
