@@ -140,14 +140,12 @@ extension RFC_2822.Mailbox: Binary.ASCII.Serializable {
             var trimmedDisplayNameBytes = Array(displayNameBytes)
             while !trimmedDisplayNameBytes.isEmpty
                 && (trimmedDisplayNameBytes.first == .ascii.space
-                    || trimmedDisplayNameBytes.first == .ascii.htab)
-            {
+                    || trimmedDisplayNameBytes.first == .ascii.htab) {
                 trimmedDisplayNameBytes.removeFirst()
             }
             while !trimmedDisplayNameBytes.isEmpty
                 && (trimmedDisplayNameBytes.last == .ascii.space
-                    || trimmedDisplayNameBytes.last == .ascii.htab)
-            {
+                    || trimmedDisplayNameBytes.last == .ascii.htab) {
                 trimmedDisplayNameBytes.removeLast()
             }
 
@@ -156,8 +154,7 @@ extension RFC_2822.Mailbox: Binary.ASCII.Serializable {
             // Remove quotes if present
             if !trimmedDisplayNameBytes.isEmpty
                 && trimmedDisplayNameBytes.first == .ascii.quotationMark
-                && trimmedDisplayNameBytes.last == .ascii.quotationMark
-            {
+                && trimmedDisplayNameBytes.last == .ascii.quotationMark {
                 displayName = String(
                     decoding: trimmedDisplayNameBytes[1..<(trimmedDisplayNameBytes.count - 1)],
                     as: UTF8.self

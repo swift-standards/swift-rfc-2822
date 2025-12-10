@@ -87,13 +87,11 @@ extension RFC_2822.Message.Path: Binary.ASCII.Serializable {
 
         // Strip leading/trailing whitespace (CFWS)
         while !byteArray.isEmpty
-            && (byteArray.first == .ascii.space || byteArray.first == .ascii.htab)
-        {
+            && (byteArray.first == .ascii.space || byteArray.first == .ascii.htab) {
             byteArray.removeFirst()
         }
         while !byteArray.isEmpty
-            && (byteArray.last == .ascii.space || byteArray.last == .ascii.htab)
-        {
+            && (byteArray.last == .ascii.space || byteArray.last == .ascii.htab) {
             byteArray.removeLast()
         }
 

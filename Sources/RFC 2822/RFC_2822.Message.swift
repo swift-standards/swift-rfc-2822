@@ -127,8 +127,7 @@ extension RFC_2822.Message: Binary.ASCII.Serializable {
         // Look for CRLF CRLF
         for i in 0..<(byteArray.count - 3) {
             if byteArray[i] == .ascii.cr && byteArray[i + 1] == .ascii.lf
-                && byteArray[i + 2] == .ascii.cr && byteArray[i + 3] == .ascii.lf
-            {
+                && byteArray[i + 2] == .ascii.cr && byteArray[i + 3] == .ascii.lf {
                 headerEndIndex = i
                 bodyStartIndex = i + 4
                 break

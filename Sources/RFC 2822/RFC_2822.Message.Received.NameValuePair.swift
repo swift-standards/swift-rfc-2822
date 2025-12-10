@@ -93,13 +93,11 @@ extension RFC_2822.Message.Received.NameValuePair: Binary.ASCII.Serializable {
 
         // Strip leading/trailing whitespace
         while !byteArray.isEmpty
-            && (byteArray.first == .ascii.space || byteArray.first == .ascii.htab)
-        {
+            && (byteArray.first == .ascii.space || byteArray.first == .ascii.htab) {
             byteArray.removeFirst()
         }
         while !byteArray.isEmpty
-            && (byteArray.last == .ascii.space || byteArray.last == .ascii.htab)
-        {
+            && (byteArray.last == .ascii.space || byteArray.last == .ascii.htab) {
             byteArray.removeLast()
         }
 
@@ -123,8 +121,7 @@ extension RFC_2822.Message.Received.NameValuePair: Binary.ASCII.Serializable {
             // Extract value after whitespace
             var valueStart = endIndex
             while valueStart < byteArray.count
-                && (byteArray[valueStart] == .ascii.space || byteArray[valueStart] == .ascii.htab)
-            {
+                && (byteArray[valueStart] == .ascii.space || byteArray[valueStart] == .ascii.htab) {
                 valueStart += 1
             }
 
