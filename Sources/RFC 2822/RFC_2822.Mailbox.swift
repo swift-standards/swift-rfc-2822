@@ -134,10 +134,9 @@ extension RFC_2822.Mailbox: Binary.ASCII.Serializable {
             }
 
             // Extract display name (everything before <)
-            let displayNameBytes = byteArray[..<openIndex]
-
             // Trim whitespace from display name (byte level)
-            var trimmedDisplayNameBytes = Array(displayNameBytes)
+            var trimmedDisplayNameBytes: [UInt8] = []
+            trimmedDisplayNameBytes.append(contentsOf: byteArray[..<openIndex])
             while !trimmedDisplayNameBytes.isEmpty
                 && (trimmedDisplayNameBytes.first == .ascii.space
                     || trimmedDisplayNameBytes.first == .ascii.htab) {

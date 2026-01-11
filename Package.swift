@@ -23,13 +23,14 @@ let package = Package(
         .library(name: .rfc2822.foundation, targets: [.rfc2822.foundation]),
     ],
     dependencies: [
-        .package(url: "https://github.com/swift-standards/swift-standards", from: "0.10.0"),
-        .package(url: "https://github.com/swift-standards/swift-incits-4-1986", from: "0.6.3"),
+        .package(path: "../../swift-primitives/swift-binary-primitives"),
+        .package(path: "../swift-incits-4-1986"),
     ],
     targets: [
         .target(
             name: .rfc2822,
             dependencies: [
+                .product(name: "Binary Primitives", package: "swift-binary-primitives"),
                 .product(name: "INCITS 4 1986", package: "swift-incits-4-1986"),
             ]
         ),
