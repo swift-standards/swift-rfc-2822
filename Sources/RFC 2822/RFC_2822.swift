@@ -5,7 +5,7 @@
 //  RFC 2822 Internet Message Format namespace
 //
 
-import INCITS_4_1986
+import ASCII
 
 /// RFC 2822 Internet Message Format
 ///

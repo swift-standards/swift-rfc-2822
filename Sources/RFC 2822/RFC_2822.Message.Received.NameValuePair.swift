@@ -11,7 +11,7 @@
 //
 // ===----------------------------------------------------------------------===//
 
-import INCITS_4_1986
+import ASCII
 
 extension RFC_2822.Message.Received {
     /// Name-value pair in a Received trace field

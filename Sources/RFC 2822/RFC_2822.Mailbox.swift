@@ -11,7 +11,7 @@
 //
 // ===----------------------------------------------------------------------===//
 
-import INCITS_4_1986
+import ASCII
 
 extension RFC_2822 {
     /// RFC 2822 mailbox (name-addr or addr-spec)

@@ -11,7 +11,7 @@
 //
 // ===----------------------------------------------------------------------===//
 
-import INCITS_4_1986
+import ASCII
 
 extension RFC_2822 {
     /// Represents an email address as defined in RFC 2822 Section 3.4
