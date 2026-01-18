@@ -19,39 +19,27 @@ let package = Package(
         .watchOS(.v26)
     ],
     products: [
-        .library(name: .rfc2822, targets: [.rfc2822]),
-        .library(name: .rfc2822.foundation, targets: [.rfc2822.foundation]),
+        .library(name: "RFC 2822", targets: ["RFC 2822"]),
+        .library(name: "RFC 2822 Foundation", targets: ["RFC 2822 Foundation"])
     ],
     dependencies: [
         .package(path: "../../swift-primitives/swift-binary-primitives"),
-        .package(path: "../../swift-foundations/swift-ascii"),
+        .package(path: "../../swift-foundations/swift-ascii")
     ],
     targets: [
         .target(
-            name: .rfc2822,
+            name: "RFC 2822",
             dependencies: [
                 .product(name: "Binary Primitives", package: "swift-binary-primitives"),
-                .product(name: "ASCII", package: "swift-ascii"),
+                .product(name: "ASCII", package: "swift-ascii")
             ]
-        ),
-        .testTarget(
-            name: .rfc2822.tests,
-            dependencies: [
-                .rfc2822
-            ]
-        ),
+        )
         .target(
-            name: .rfc2822.foundation,
+            name: "RFC 2822 Foundation",
             dependencies: [
                 .rfc2822
             ]
-        ),
-        .testTarget(
-            name: .rfc2822.foundation.tests,
-            dependencies: [
-                .byName(name: .rfc2822.foundation)
-            ]
-        ),
+        )
     ],
     swiftLanguageModes: [.v6]
 )
@@ -67,6 +55,6 @@ for target in package.targets where ![.system, .binary, .plugin].contains(target
     existing + [
         .enableUpcomingFeature("ExistentialAny"),
         .enableUpcomingFeature("InternalImportsByDefault"),
-        .enableUpcomingFeature("MemberImportVisibility"),
+        .enableUpcomingFeature("MemberImportVisibility")
     ]
 }
