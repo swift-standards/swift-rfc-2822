@@ -46,7 +46,6 @@ extension RFC_2822.Mailbox.Parse {
 }
 
 extension RFC_2822.Mailbox.Parse: Parser.`Protocol` {
-    public typealias ParseOutput = Output
     public typealias Failure = RFC_2822.Mailbox.Parse<Input>.Error
 
     @inlinable

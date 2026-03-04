@@ -45,7 +45,6 @@ extension RFC_2822.AddrSpec.Parse {
 }
 
 extension RFC_2822.AddrSpec.Parse: Parser.`Protocol` {
-    public typealias ParseOutput = Output
     public typealias Failure = RFC_2822.AddrSpec.Parse<Input>.Error
 
     @inlinable
