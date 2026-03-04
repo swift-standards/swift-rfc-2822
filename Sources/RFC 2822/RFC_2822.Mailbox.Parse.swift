@@ -1,5 +1,5 @@
 //
-//  RFC_2822.Parse.Mailbox.swift
+//  RFC_2822.Mailbox.Parse.swift
 //  swift-rfc-2822
 //
 //  RFC 2822 mailbox: [display-name] "<" addr-spec ">" / addr-spec
@@ -7,7 +7,7 @@
 
 public import Parser_Primitives
 
-extension RFC_2822.Parse {
+extension RFC_2822.Mailbox {
     /// Parses an RFC 2822 mailbox.
     ///
     /// `mailbox = name-addr / addr-spec`
@@ -15,14 +15,14 @@ extension RFC_2822.Parse {
     /// `angle-addr = "<" addr-spec ">"`
     ///
     /// Returns the display name (if present) and addr-spec components.
-    public struct Mailbox<Input: Collection.Slice.`Protocol`>: Sendable
+    public struct Parse<Input: Collection.Slice.`Protocol`>: Sendable
     where Input: Sendable, Input.Element == UInt8 {
         @inlinable
         public init() {}
     }
 }
 
-extension RFC_2822.Parse.Mailbox {
+extension RFC_2822.Mailbox.Parse {
     public struct Output: Sendable {
         public let displayName: Input?
         public let localPart: Input
@@ -45,9 +45,9 @@ extension RFC_2822.Parse.Mailbox {
     }
 }
 
-extension RFC_2822.Parse.Mailbox: Parser.`Protocol` {
+extension RFC_2822.Mailbox.Parse: Parser.`Protocol` {
     public typealias ParseOutput = Output
-    public typealias Failure = RFC_2822.Parse.Mailbox<Input>.Error
+    public typealias Failure = RFC_2822.Mailbox.Parse<Input>.Error
 
     @inlinable
     public func parse(_ input: inout Input) throws(Failure) -> Output {

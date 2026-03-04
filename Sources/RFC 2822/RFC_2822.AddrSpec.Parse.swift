@@ -1,5 +1,5 @@
 //
-//  RFC_2822.Parse.AddrSpec.swift
+//  RFC_2822.AddrSpec.Parse.swift
 //  swift-rfc-2822
 //
 //  RFC 2822 addr-spec: local-part "@" domain
@@ -7,7 +7,7 @@
 
 public import Parser_Primitives
 
-extension RFC_2822.Parse {
+extension RFC_2822.AddrSpec {
     /// Parses an RFC 2822 addr-spec.
     ///
     /// `addr-spec = local-part "@" domain`
@@ -17,14 +17,14 @@ extension RFC_2822.Parse {
     /// - `domain = dot-atom / domain-literal`
     ///
     /// Returns raw byte slices for local-part and domain.
-    public struct AddrSpec<Input: Collection.Slice.`Protocol`>: Sendable
+    public struct Parse<Input: Collection.Slice.`Protocol`>: Sendable
     where Input: Sendable, Input.Element == UInt8 {
         @inlinable
         public init() {}
     }
 }
 
-extension RFC_2822.Parse.AddrSpec {
+extension RFC_2822.AddrSpec.Parse {
     public struct Output: Sendable {
         public let localPart: Input
         public let domain: Input
@@ -44,9 +44,9 @@ extension RFC_2822.Parse.AddrSpec {
     }
 }
 
-extension RFC_2822.Parse.AddrSpec: Parser.`Protocol` {
+extension RFC_2822.AddrSpec.Parse: Parser.`Protocol` {
     public typealias ParseOutput = Output
-    public typealias Failure = RFC_2822.Parse.AddrSpec<Input>.Error
+    public typealias Failure = RFC_2822.AddrSpec.Parse<Input>.Error
 
     @inlinable
     public func parse(_ input: inout Input) throws(Failure) -> Output {
