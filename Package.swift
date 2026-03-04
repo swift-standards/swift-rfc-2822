@@ -24,14 +24,16 @@ let package = Package(
     ],
     dependencies: [
         .package(path: "../../swift-primitives/swift-binary-primitives"),
-        .package(path: "../../swift-foundations/swift-ascii")
+        .package(path: "../../swift-foundations/swift-ascii"),
+        .package(path: "../../swift-primitives/swift-parser-primitives")
     ],
     targets: [
         .target(
             name: "RFC 2822",
             dependencies: [
                 .product(name: "Binary Primitives", package: "swift-binary-primitives"),
-                .product(name: "ASCII", package: "swift-ascii")
+                .product(name: "ASCII", package: "swift-ascii"),
+                .product(name: "Parser Primitives", package: "swift-parser-primitives")
             ]
         ),
         .target(
