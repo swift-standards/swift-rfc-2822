@@ -11,7 +11,8 @@
 //
 // ===----------------------------------------------------------------------===//
 
-import ASCII
+import ASCII_Serializer_Primitives
+import INCITS_4_1986
 
 extension RFC_2822.Message {
     /// RFC 2822 message body

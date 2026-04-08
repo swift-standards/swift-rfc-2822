@@ -24,7 +24,8 @@ let package = Package(
     ],
     dependencies: [
         .package(path: "../../swift-primitives/swift-binary-primitives"),
-        .package(path: "../../swift-foundations/swift-ascii"),
+        .package(path: "../../swift-primitives/swift-ascii-serializer-primitives"),
+        .package(path: "../../swift-incits/swift-incits-4-1986"),
         .package(path: "../../swift-primitives/swift-parser-primitives")
     ],
     targets: [
@@ -32,7 +33,8 @@ let package = Package(
             name: "RFC 2822",
             dependencies: [
                 .product(name: "Binary Primitives", package: "swift-binary-primitives"),
-                .product(name: "ASCII", package: "swift-ascii"),
+                .product(name: "ASCII Serializer Primitives", package: "swift-ascii-serializer-primitives"),
+                .product(name: "INCITS 4 1986", package: "swift-incits-4-1986"),
                 .product(name: "Parser Primitives", package: "swift-parser-primitives")
             ]
         ),
