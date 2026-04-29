@@ -1,0 +1,9 @@
+# .github/metadata.yaml
+# Triaged by AI-assisted bulk pass (2026-04-29).
+description: "Swift implementation of RFC 2822: Internet Message Format."
+topics:
+  - standards
+  - rfc
+  - rfc-2822
+  - email
+homepage: "https://swift-institute.org"
