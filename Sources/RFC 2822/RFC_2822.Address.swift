@@ -90,13 +90,6 @@ extension RFC_2822.Address.Kind {
         case _1
     }
 
-    // REASON: `Swift.Decodable.init(from:)` is declared upstream with untyped
-    // `throws` and an existential `Decoder` parameter; a conforming implementation
-    // is signature-forced and can express neither `throws(E)` nor a generic
-    // parameter. The block form is used here instead of `disable:next` because this
-    // declaration carries a doc comment: a directive between the doc comment and the
-    // declaration trips `orphaned_doc_comment`.
-    // swiftlint:disable no_any_protocol_existential typed_throws_required
     /// Hand-written `Decodable` conformance closing a REAL, empirically
     /// confirmed bypass: decoding a bare `RFC_2822.Address.Kind.group` value
     /// directly (not wrapped in `Address` — e.g. as the payload of some
@@ -117,12 +110,16 @@ extension RFC_2822.Address.Kind {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         if container.contains(.mailbox) {
             let payload = try container.nestedContainer(
-                keyedBy: PayloadKeys.self, forKey: .mailbox)
+                keyedBy: PayloadKeys.self,
+                forKey: .mailbox
+            )
             let mailbox = try payload.decode(RFC_2822.Mailbox.self, forKey: ._0)
             self = .mailbox(mailbox)
         } else if container.contains(.group) {
             let payload = try container.nestedContainer(
-                keyedBy: PayloadKeys.self, forKey: .group)
+                keyedBy: PayloadKeys.self,
+                forKey: .group
+            )
             let displayName = try payload.decode(String.self, forKey: ._0)
             let members = try payload.decode([RFC_2822.Mailbox].self, forKey: ._1)
             try RFC_2822.Mailbox.validateDisplayName(displayName)
@@ -136,7 +133,6 @@ extension RFC_2822.Address.Kind {
             )
         }
     }
-    // swiftlint:enable no_any_protocol_existential typed_throws_required
 }
 
 // MARK: - Emit-time injection guard (defense in depth)

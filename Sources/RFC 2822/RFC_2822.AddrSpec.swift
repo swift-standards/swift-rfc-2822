@@ -148,7 +148,8 @@ extension RFC_2822.AddrSpec: ASCII.Serializable, Binary.Serializable {
     ) where Buffer.Element == ASCII.Code {
         preconditionInjectionSafe(localPart: addrSpec.localPart, domain: addrSpec.domain)
         buffer.reserveCapacity(
-            buffer.count + addrSpec.localPart.utf8.count + 1 + addrSpec.domain.utf8.count)
+            buffer.count + addrSpec.localPart.utf8.count + 1 + addrSpec.domain.utf8.count
+        )
         for byte in addrSpec.localPart.utf8 { buffer.append(ASCII.Code(byte)) }
         buffer.append(ASCII.Code.commercialAt)
         for byte in addrSpec.domain.utf8 { buffer.append(ASCII.Code(byte)) }
@@ -167,7 +168,8 @@ extension RFC_2822.AddrSpec: ASCII.Serializable, Binary.Serializable {
     ) where Buffer.Element == Byte {
         preconditionInjectionSafe(localPart: addrSpec.localPart, domain: addrSpec.domain)
         buffer.reserveCapacity(
-            buffer.count + addrSpec.localPart.utf8.count + 1 + addrSpec.domain.utf8.count)
+            buffer.count + addrSpec.localPart.utf8.count + 1 + addrSpec.domain.utf8.count
+        )
         for byte in addrSpec.localPart.utf8 { buffer.append(Byte(byte)) }
         buffer.append(ASCII.Code.commercialAt.byte)
         for byte in addrSpec.domain.utf8 { buffer.append(Byte(byte)) }

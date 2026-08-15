@@ -247,7 +247,8 @@ extension RFC_2822.Mailbox {
         @Test
         func `Successfully creates mailbox with quoted display name`() throws {
             let mailbox = try RFC_2822.Mailbox(
-                ascii: Array("\"John Q. Doe\" <john@example.com>".utf8))
+                ascii: Array("\"John Q. Doe\" <john@example.com>".utf8)
+            )
             #expect(mailbox.displayName == "John Q. Doe")
         }
 
@@ -485,7 +486,8 @@ extension RFC_2822.Address {
         @Test
         func `Successfully creates group address`() throws {
             let address = try RFC_2822.Address(
-                ascii: Array("Team: john@example.com, jane@example.com;".utf8))
+                ascii: Array("Team: john@example.com, jane@example.com;".utf8)
+            )
             if case .group(let name, let mailboxes) = address.kind {
                 #expect(name == "Team")
                 #expect(mailboxes.count == 2)
