@@ -1,10 +1,5 @@
-//
-//  RFC_2822.Timestamp.Month.swift
-//  swift-rfc-2822
-//
-
 extension RFC_2822.Timestamp {
-    /// The `month-name` token per RFC 2822 Section 3.3.
+
     public enum Month: Int, Sendable, Codable, Hashable, CaseIterable {
         case january = 1
         case february
@@ -22,7 +17,7 @@ extension RFC_2822.Timestamp {
 }
 
 extension RFC_2822.Timestamp.Month {
-    /// The 3-letter wire token (`"Jan"` ... `"Dec"`).
+
     public var abbreviation: String {
         switch self {
         case .january: return "Jan"

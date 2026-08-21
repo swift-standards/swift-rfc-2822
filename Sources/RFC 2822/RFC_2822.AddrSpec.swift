@@ -1,47 +1,14 @@
-// ===----------------------------------------------------------------------===//
-//
-// This source file is part of the swift-rfc-2822 open source project
-//
-// Copyright (c) 2025 Coen ten Thije Boonkkamp
-// Licensed under Apache License v2.0
-//
-// See LICENSE.txt for license information
-//
-// SPDX-License-Identifier: Apache-2.0
-//
-// ===----------------------------------------------------------------------===//
-
 public import ASCII_Serializer_Primitives
 public import Binary_Serializable_Primitives
 import INCITS_4_1986
 public import Parseable_ASCII_Primitives
 
 extension RFC_2822 {
-    /// RFC 2822 addr-spec (local-part@domain)
-    ///
-    /// Per RFC 2822 Section 3.4.1:
-    /// ```
-    /// addr-spec = local-part "@" domain
-    /// local-part = dot-atom / quoted-string
-    /// domain = dot-atom / domain-literal
-    /// ```
-    ///
-    /// ## Example
-    ///
-    /// ```swift
-    /// let addr = try RFC_2822.AddrSpec("user@example.com")
-    /// ```
-    ///
-    /// ## See Also
-    ///
-    /// - [RFC 2822 Section 3.4.1](https://www.rfc-editor.org/rfc/rfc2822#section-3.4.1)
+
     public struct AddrSpec: Sendable, Codable {
         public let localPart: String
         public let domain: String
 
-        /// Creates an addr-spec WITHOUT validation
-        ///
-        /// Private to ensure all public construction goes through validation.
         private init(
             __unchecked: Void,
             localPart: String,
@@ -51,17 +18,11 @@ extension RFC_2822 {
             self.domain = domain
         }
 
-        /// Creates an addr-spec with validation
-        ///
-        /// - Parameters:
-        ///   - localPart: The local part (before @)
-        ///   - domain: The domain part (after @)
-        /// - Throws: `Error` if validation fails
         public init(
             localPart: String,
             domain: String
         ) throws(Error) {
-            // Validate local-part
+
             guard !localPart.isEmpty else {
                 throw Error.invalidLocalPart("")
             }
@@ -73,7 +34,6 @@ extension RFC_2822 {
             }
             try Self.validateLocalPart(localCodes)
 
-            // Validate domain
             guard !domain.isEmpty else {
                 throw Error.invalidDomain("")
             }
@@ -90,28 +50,8 @@ extension RFC_2822 {
     }
 }
 
-// MARK: - Emit-time injection guard (defense in depth)
-
 extension RFC_2822.AddrSpec {
-    /// Belt-and-suspenders emit-time guard (defense in depth): every
-    /// construction path validates `localPart`/`domain` against the RFC
-    /// 2822 grammar (which excludes CR/LF — NO-WS-CTL is `%d1-8 / %d11 /
-    /// %d12 / %d14-31 / %d127`, deliberately skipping CR `%d13` and LF
-    /// `%d10`), so a CR/LF byte reaching `serialize`/`description` means an
-    /// invariant was violated upstream. `precondition` (not `assert`) so the
-    /// guard stays live in release builds too.
-    ///
-    /// `AddrSpec` does NOT need a hand-written `Decodable` conformance: like
-    /// `Mailbox`, it also conforms to `Swift.RawRepresentable` (`RawValue ==
-    /// String`, below), and the Swift standard library's conditional
-    /// `RawRepresentable`-based `Codable` witness (encode/decode via the raw
-    /// string) takes priority over compiler-synthesized per-property
-    /// `Codable` — CONFIRMED empirically (`JSONEncoder().encode(addrSpec)`
-    /// produces `"user@example.com"`, not `{"localPart":...,"domain":...}`).
-    /// Decoding therefore already goes through `init?(rawValue:)` ->
-    /// `self.init(ascii:)` -> the fully-validating `init(localPart:domain:)`
-    /// — there never was a reachable dictionary-shaped synthesized-decode
-    /// path to close for this type.
+
     fileprivate static func preconditionInjectionSafe(localPart: String, domain: String) {
         precondition(
             !localPart.utf8.contains(where: { $0 == 0x0D || $0 == 0x0A })
@@ -122,11 +62,9 @@ extension RFC_2822.AddrSpec {
     }
 }
 
-// MARK: - Hashable
-
 extension RFC_2822.AddrSpec: Hashable {
     public func hash(into hasher: inout Hasher) {
-        // RFC 2822 local-part is case-sensitive, domain is case-insensitive
+
         hasher.combine(localPart)
         hasher.combine(domain.lowercased())
     }
@@ -136,12 +74,8 @@ extension RFC_2822.AddrSpec: Hashable {
     }
 }
 
-// MARK: - ASCII.Serializable / Binary.Serializable ([FAM-012] format siblings)
-
 extension RFC_2822.AddrSpec: ASCII.Serializable, Binary.Serializable {
-    /// Serializes the addr-spec as `local-part@domain` ASCII text.
-    ///
-    /// [FAM-012] text sibling — emits the typed text substrate `ASCII.Code`.
+
     public static func serialize<Buffer: RangeReplaceableCollection>(
         _ addrSpec: RFC_2822.AddrSpec,
         into buffer: inout Buffer
@@ -155,13 +89,6 @@ extension RFC_2822.AddrSpec: ASCII.Serializable, Binary.Serializable {
         for byte in addrSpec.domain.utf8 { buffer.append(ASCII.Code(byte)) }
     }
 
-    /// Serializes the addr-spec as `local-part@domain` wire bytes.
-    ///
-    /// [FAM-012] binary sibling. Clause-9: an independent body re-emitting the
-    /// grammar directly into the `Byte` domain — NOT a `.serialized`/`.bytes`
-    /// detour through the ASCII verb. Byte-equivalent to the text form (an
-    /// addr-spec is ASCII text); the ASCII==Binary equivalence test guards the
-    /// two bodies against drift.
     public static func serialize<Buffer: RangeReplaceableCollection>(
         _ addrSpec: RFC_2822.AddrSpec,
         into buffer: inout Buffer
@@ -176,38 +103,12 @@ extension RFC_2822.AddrSpec: ASCII.Serializable, Binary.Serializable {
     }
 }
 
-// MARK: - ASCII.Parseable ([FAM-012] parse — free-standing init; marker requirement seal-last)
-
 extension RFC_2822.AddrSpec: ASCII.Parseable {
 
-    /// Parses an addr-spec from ASCII bytes
-    ///
-    /// ## Category Theory
-    ///
-    /// Parsing transformation:
-    /// - **Domain**: [Byte] (ASCII bytes)
-    /// - **Codomain**: RFC_2822.AddrSpec (structured data)
-    ///
-    /// String parsing is derived composition:
-    /// ```
-    /// String → [Byte] (UTF-8) → AddrSpec
-    /// ```
-    ///
-    /// ## RFC 2822 Section 3.4.1
-    ///
-    /// ```
-    /// addr-spec = local-part "@" domain
-    /// local-part = dot-atom / quoted-string
-    /// domain = dot-atom / domain-literal
-    /// ```
-    ///
-    /// - Parameter bytes: The addr-spec as ASCII bytes
-    /// - Throws: `Error` if parsing or validation fails
     public init<Bytes: Swift.Collection>(ascii bytes: Bytes) throws(Error)
     where Bytes.Element == Byte {
         guard !bytes.isEmpty else { throw Error.empty }
 
-        // Find the @ separator (use last @ to handle quoted local-parts with @)
         var atIndex: Bytes.Index?
         for index in bytes.indices where bytes[index] == ASCII.Code.commercialAt.byte {
             atIndex = index
@@ -217,7 +118,6 @@ extension RFC_2822.AddrSpec: ASCII.Parseable {
             throw Error.missingAtSign(String(decoding: bytes, as: UTF8.self))
         }
 
-        // Extract local-part and domain as slices (zero-copy)
         let localPartBytes = bytes[..<at]
         let domainBytes = bytes[bytes.index(after: at)...]
 
@@ -229,7 +129,6 @@ extension RFC_2822.AddrSpec: ASCII.Parseable {
             throw Error.invalidDomain("")
         }
 
-        // Delegate to public validating init
         try self.init(
             localPart: String(decoding: localPartBytes, as: UTF8.self),
             domain: String(decoding: domainBytes, as: UTF8.self)
@@ -237,12 +136,8 @@ extension RFC_2822.AddrSpec: ASCII.Parseable {
     }
 }
 
-// MARK: - Validation Helpers
-
 extension RFC_2822.AddrSpec {
-    /// Validates a local-part per RFC 2822
-    ///
-    /// local-part = dot-atom / quoted-string
+
     private static func validateLocalPart<Codes: Swift.Collection>(
         _ codes: Codes
     ) throws(Error) where Codes.Element == ASCII.Code {
@@ -250,22 +145,18 @@ extension RFC_2822.AddrSpec {
             throw Error.invalidLocalPart("")
         }
 
-        // Get last code by iteration (avoids Array allocation)
         var lastCode = firstCode
         for code in codes { lastCode = code }
 
         if firstCode == ASCII.Code.quotationMark && lastCode == ASCII.Code.quotationMark {
-            // Quoted-string format
+
             try validateQuotedString(codes, for: .localPart)
         } else {
-            // Dot-atom format
+
             try validateDotAtom(codes, for: .localPart)
         }
     }
 
-    /// Validates a domain per RFC 2822
-    ///
-    /// domain = dot-atom / domain-literal
     private static func validateDomain<Codes: Swift.Collection>(
         _ codes: Codes
     ) throws(Error) where Codes.Element == ASCII.Code {
@@ -273,22 +164,18 @@ extension RFC_2822.AddrSpec {
             throw Error.invalidDomain("")
         }
 
-        // Get last code by iteration (avoids Array allocation)
         var lastCode = firstCode
         for code in codes { lastCode = code }
 
         if firstCode == ASCII.Code.leftSquareBracket && lastCode == ASCII.Code.rightSquareBracket {
-            // Domain-literal format
+
             try validateDomainLiteral(codes)
         } else {
-            // Dot-atom format
+
             try validateDotAtom(codes, for: .domain)
         }
     }
 
-    /// Validates a dot-atom
-    ///
-    /// dot-atom-text = 1*atext *("." 1*atext)
     private static func validateDotAtom<Codes: Swift.Collection>(
         _ codes: Codes,
         for part: Part
@@ -297,39 +184,29 @@ extension RFC_2822.AddrSpec {
             throw errorFor(part, String(decoding: codes, as: UTF8.self))
         }
 
-        // Get last code
         var lastCode = firstCode
         for code in codes { lastCode = code }
 
-        // Cannot start or end with dot
         guard firstCode != ASCII.Code.period && lastCode != ASCII.Code.period else {
             throw errorFor(part, String(decoding: codes, as: UTF8.self))
         }
 
-        // Validate each code
         var previousCode: ASCII.Code = ASCII.Code(0)
         for code in codes {
-            // Check for consecutive dots
+
             if code == ASCII.Code.period && previousCode == ASCII.Code.period {
                 throw errorFor(part, String(decoding: codes, as: UTF8.self))
             }
             previousCode = code
 
-            // Period is allowed as separator
             if code == ASCII.Code.period { continue }
 
-            // Must be atext
             guard RFC_2822.isAtext(code) else {
                 throw errorFor(part, String(decoding: codes, as: UTF8.self))
             }
         }
     }
 
-    /// Validates a quoted-string
-    ///
-    /// quoted-string = DQUOTE *qcontent DQUOTE
-    /// qcontent = qtext / quoted-pair
-    /// qtext = NO-WS-CTL / %d33 / %d35-91 / %d93-126
     private static func validateQuotedString<Codes: Swift.Collection>(
         _ codes: Codes,
         for part: Part
@@ -342,7 +219,6 @@ extension RFC_2822.AddrSpec {
         for code in codes {
             codeCount += 1
 
-            // Skip first and last quotes
             if isFirst {
                 isFirst = false
                 continue
@@ -354,7 +230,7 @@ extension RFC_2822.AddrSpec {
             } else if code == ASCII.Code.reverseSolidus {
                 isEscaped = true
             } else {
-                // qtext validation: NO-WS-CTL / %d33 / %d35-91 / %d93-126
+
                 let isValidQText =
                     (code >= 1 && code <= 8) || code == 11 || code == 12
                     || (code >= 14 && code <= 31) || code == 33 || (code >= 35 && code <= 91)
@@ -370,11 +246,6 @@ extension RFC_2822.AddrSpec {
         }
     }
 
-    /// Validates a domain-literal
-    ///
-    /// domain-literal = "[" *dcontent "]"
-    /// dcontent = dtext / quoted-pair
-    /// dtext = NO-WS-CTL / %d33-90 / %d94-126
     private static func validateDomainLiteral<Codes: Swift.Collection>(
         _ codes: Codes
     ) throws(Error) where Codes.Element == ASCII.Code {
@@ -386,7 +257,6 @@ extension RFC_2822.AddrSpec {
         for code in codes {
             codeCount += 1
 
-            // Skip first and last brackets
             if isFirst {
                 isFirst = false
                 continue
@@ -394,7 +264,7 @@ extension RFC_2822.AddrSpec {
             if codeCount == totalCount { continue }
 
             if isEscaped {
-                // Only certain characters can follow backslash
+
                 guard
                     code == ASCII.Code.leftSquareBracket
                         || code == ASCII.Code.rightSquareBracket
@@ -406,7 +276,7 @@ extension RFC_2822.AddrSpec {
             } else if code == ASCII.Code.reverseSolidus {
                 isEscaped = true
             } else {
-                // dtext validation: NO-WS-CTL / %d33-90 / %d94-126
+
                 let isValidDText =
                     (code >= 1 && code <= 8) || code == 11 || code == 12
                     || (code >= 14 && code <= 31) || (code >= 33 && code <= 90)
@@ -422,7 +292,6 @@ extension RFC_2822.AddrSpec {
         }
     }
 
-    /// Returns the appropriate error for the part being validated
     private static func errorFor(_ part: Part, _ value: String) -> RFC_2822.AddrSpec.Error {
         switch part {
         case .localPart: return Error.invalidLocalPart(value)
@@ -431,16 +300,10 @@ extension RFC_2822.AddrSpec {
     }
 }
 
-// MARK: - RawRepresentable / CustomStringConvertible
-
 extension RFC_2822.AddrSpec: Swift.RawRepresentable {
-    /// The canonical `local-part@domain` string form.
-    ///
-    /// Re-provides `Swift.RawRepresentable` directly — the retired
-    /// `Binary.ASCII.RawRepresentable` no longer synthesizes it.
+
     public var rawValue: String { description }
 
-    /// Creates an addr-spec by validating `rawValue`, or `nil` if it is malformed.
     public init?(rawValue: String) {
         do throws(RFC_2822.AddrSpec.Error) {
             try self.init(ascii: rawValue.utf8.map { Byte($0) })
@@ -451,8 +314,7 @@ extension RFC_2822.AddrSpec: Swift.RawRepresentable {
 }
 
 extension RFC_2822.AddrSpec: CustomStringConvertible {
-    /// The addr-spec in `local-part@domain` form — the same grammar the
-    /// `ASCII.Serializable` / `Binary.Serializable` verbs emit.
+
     public var description: String {
         Self.preconditionInjectionSafe(localPart: localPart, domain: domain)
         return "\(localPart)@\(domain)"

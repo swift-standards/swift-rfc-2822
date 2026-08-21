@@ -1,10 +1,3 @@
-//
-//  RFC_2822.Mailbox.Parse.Output.swift
-//  swift-rfc-2822
-//
-//  Output of RFC_2822.Mailbox.Parse
-//
-
 extension RFC_2822.Mailbox.Parse {
     public struct Output: Sendable {
         public let displayName: Input?

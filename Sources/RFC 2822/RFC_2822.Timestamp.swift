@@ -1,60 +1,12 @@
-// ===----------------------------------------------------------------------===//
-//
-// This source file is part of the swift-rfc-2822 open source project
-//
-// Copyright (c) 2025 Coen ten Thije Boonkkamp
-// Licensed under Apache License v2.0
-//
-// See LICENSE.txt for license information
-//
-// SPDX-License-Identifier: Apache-2.0
-//
-// ===----------------------------------------------------------------------===//
-
 public import ASCII_Serializer_Primitives
 public import Binary_Serializable_Primitives
 import INCITS_4_1986
 public import Parseable_ASCII_Primitives
 
 extension RFC_2822 {
-    /// RFC 2822 timestamp
-    ///
-    /// Per RFC 2822 Section 3.3:
-    /// ```
-    /// date-time = [ day-of-week "," ] date FWS time [CFWS]
-    /// date = day month year
-    /// time = time-of-day FWS zone
-    /// time-of-day = hour ":" minute [ ":" second ]
-    /// zone = (( "+" / "-" ) 4DIGIT) / obs-zone
-    /// ```
-    ///
-    /// The full RFC 2822 date-time grammar — day-of-week, date, time-of-day,
-    /// and zone — is this type's AUTHORITATIVE wire form: every
-    /// `ASCII.Parseable` / `ASCII.Serializable` / `Binary.Serializable`
-    /// conformance reads and writes real date-time text (e.g. `Fri, 21 Nov
-    /// 1997 09:55:06 -0600`), not a bare numeric epoch. `secondsSinceEpoch`
-    /// remains available as a derived accessor, computed from the stored
-    /// calendar fields with a pure-Swift proleptic-Gregorian conversion — no
-    /// `Foundation.Date` / `Calendar` dependency (this target stays
-    /// Foundation-free per the workspace's primitives-layer rule).
-    /// `Foundation.Date` / `FormatStyle` interop belongs in the sibling
-    /// `RFC 2822 Foundation` target.
-    ///
-    /// ## Example
-    ///
-    /// ```swift
-    /// let generated = RFC_2822.Timestamp(secondsSinceEpoch: 1234567890)
-    /// let parsed = try RFC_2822.Timestamp(
-    ///     ascii: Array("Fri, 13 Feb 2009 23:31:30 +0000".utf8)
-    /// )
-    /// ```
+
     public struct Timestamp: Sendable, Codable {
-        /// The `day-name` token, if the wire text carried one. RFC 2822
-        /// permits (but does not require) a day name preceding the date.
-        /// On parse this is preserved verbatim from the wire text and is
-        /// NOT cross-checked against the actual weekday of
-        /// `day`/`month`/`year` — a mismatching day name is a generator
-        /// bug, not a parse failure (Section 3.3 leniency).
+
         public let dayOfWeek: DayOfWeek?
         public let day: Int
         public let month: Month
@@ -64,7 +16,6 @@ extension RFC_2822 {
         public let second: Int
         public let zone: Zone
 
-        /// Creates a timestamp WITHOUT validation
         init(
             __unchecked: Void,
             dayOfWeek: DayOfWeek?,
@@ -86,11 +37,6 @@ extension RFC_2822 {
             self.zone = zone
         }
 
-        /// Creates a timestamp from explicit RFC 2822 date-time components
-        ///
-        /// - Throws: `Error` if any component is out of range for the
-        ///   proleptic Gregorian calendar (e.g. day 30 in February) or
-        ///   outside its wire-grammar bounds (e.g. minute 60).
         public init(
             dayOfWeek: DayOfWeek? = nil,
             day: Int,
@@ -108,7 +54,7 @@ extension RFC_2822 {
             guard minute >= 0 && minute <= 59 else {
                 throw Error.invalidComponent("minute", "\(minute)")
             }
-            // RFC 2822 second = 2DIGIT; tolerate a positive leap second (60).
+
             guard second >= 0 && second <= 60 else {
                 throw Error.invalidComponent("second", "\(second)")
             }
@@ -133,15 +79,12 @@ extension RFC_2822 {
     }
 }
 
-// MARK: - Proleptic Gregorian Calendar Conversion (Foundation-free)
-
 extension RFC_2822.Timestamp {
-    /// `true` if `year` is a leap year in the proleptic Gregorian calendar.
+
     static func isLeapYear(_ year: Int) -> Bool {
         (year % 4 == 0 && year % 100 != 0) || year % 400 == 0
     }
 
-    /// Days in `month` (1-12) for `year`, per the proleptic Gregorian calendar.
     static func daysInMonth(month: Int, year: Int) -> Int {
         switch month {
         case 1, 3, 5, 7, 8, 10, 12: return 31
@@ -151,55 +94,38 @@ extension RFC_2822.Timestamp {
         }
     }
 
-    /// Days since the epoch (1970-01-01) for a proleptic-Gregorian civil
-    /// date. Howard Hinnant's `days_from_civil` algorithm (public domain,
-    /// http://howardhinnant.github.io/date_algorithms.html), transliterated
-    /// to Swift integer arithmetic — valid for every `Int`-representable
-    /// year, no `Foundation.Calendar` dependency.
     static func daysFromCivil(year: Int, month: Int, day: Int) -> Int {
         let y = month <= 2 ? year - 1 : year
         let era = (y >= 0 ? y : y - 399) / 400
-        let yoe = y - era * 400  // [0, 399]
-        let mp = (month + 9) % 12  // [0, 11]
-        let doy = (153 * mp + 2) / 5 + day - 1  // [0, 365]
-        let doe = yoe * 365 + yoe / 4 - yoe / 100 + doy  // [0, 146096]
+        let yoe = y - era * 400
+        let mp = (month + 9) % 12
+        let doy = (153 * mp + 2) / 5 + day - 1
+        let doe = yoe * 365 + yoe / 4 - yoe / 100 + doy
         return era * 146097 + doe - 719468
     }
 
-    /// Inverse of `daysFromCivil` — the proleptic-Gregorian civil date for
-    /// `days` days since the epoch (1970-01-01).
     static func civilFromDays(_ days: Int) -> (year: Int, month: Int, day: Int) {
         let z = days + 719468
         let era = (z >= 0 ? z : z - 146096) / 146097
-        let doe = z - era * 146097  // [0, 146096]
-        let yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365  // [0, 399]
+        let doe = z - era * 146097
+        let yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365
         let y = yoe + era * 400
-        let doy = doe - (365 * yoe + yoe / 4 - yoe / 100)  // [0, 365]
-        let mp = (5 * doy + 2) / 153  // [0, 11]
-        let d = doy - (153 * mp + 2) / 5 + 1  // [1, 31]
-        let m = mp < 10 ? mp + 3 : mp - 9  // [1, 12]
+        let doy = doe - (365 * yoe + yoe / 4 - yoe / 100)
+        let mp = (5 * doy + 2) / 153
+        let d = doy - (153 * mp + 2) / 5 + 1
+        let m = mp < 10 ? mp + 3 : mp - 9
         return (y + (m <= 2 ? 1 : 0), m, d)
     }
 
-    /// The day-of-week for `days` days since the epoch (1970-01-01, a
-    /// Thursday). Hinnant's `weekday_from_days` (0 = Sunday), remapped to
-    /// `DayOfWeek`'s Monday-first raw values (0 = Monday ... 6 = Sunday).
     static func dayOfWeek(fromDays days: Int) -> DayOfWeek {
-        let sundayFirst = days >= -4 ? (days + 4) % 7 : (days + 5) % 7 + 6  // [0, 6], 0 = Sunday
+        let sundayFirst = days >= -4 ? (days + 4) % 7 : (days + 5) % 7 + 6
         let mondayFirst = (sundayFirst + 6) % 7
         return DayOfWeek(rawValue: mondayFirst) ?? .monday
     }
 }
 
-// MARK: - secondsSinceEpoch accessor
-
 extension RFC_2822.Timestamp {
-    /// Creates a timestamp from seconds-since-epoch (UTC — the RFC 2822
-    /// `+0000` zone), with a computed, correct `dayOfWeek`.
-    ///
-    /// Sub-second precision does not survive the RFC 2822 wire form (its
-    /// grammar has no fractional-seconds field) and is truncated toward
-    /// negative infinity.
+
     public init(secondsSinceEpoch: Double) {
         let totalSeconds = Int(secondsSinceEpoch.rounded(.down))
         var days = totalSeconds / 86400
@@ -222,10 +148,6 @@ extension RFC_2822.Timestamp {
         )
     }
 
-    /// The instant this timestamp denotes, as seconds since the epoch
-    /// (1970-01-01T00:00:00 UTC) — derived from the stored calendar fields
-    /// and `zone` offset (`.unknown` is treated as a zero offset, per its
-    /// documented "no zone information" semantics).
     public var secondsSinceEpoch: Double {
         let days = Self.daysFromCivil(year: year, month: month.rawValue, day: day)
         let localSeconds = days * 86400 + hour * 3600 + minute * 60 + second
@@ -238,14 +160,8 @@ extension RFC_2822.Timestamp {
     }
 }
 
-// MARK: - Hashable
-
 extension RFC_2822.Timestamp: Hashable {
-    /// Equality (and hashing) compare the resolved instant
-    /// (`secondsSinceEpoch`), not the literal wire representation — two
-    /// timestamps naming the same instant through different zones (or a
-    /// present vs. absent `dayOfWeek`) are equal, matching this type's
-    /// pre-existing epoch-based identity.
+
     public static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.secondsSinceEpoch == rhs.secondsSinceEpoch
     }
@@ -255,18 +171,8 @@ extension RFC_2822.Timestamp: Hashable {
     }
 }
 
-// MARK: - ASCII.Serializable / Binary.Serializable ([FAM-012] format siblings)
-
 extension RFC_2822.Timestamp {
-    /// The canonical RFC 2822 date-time wire text, e.g.
-    /// `Fri, 21 Nov 1997 09:55:06 -0600`.
-    ///
-    /// Shared by the ASCII/Binary serialize verbs below (both iterate this
-    /// `String`'s `.utf8` directly into their own buffer element type — the
-    /// same "compose from a stored/derived `String`'s `.utf8`" shape
-    /// `AddrSpec`/`Mailbox` use for their stored fields, not a
-    /// `.serialized`/`.bytes` detour through each other) and by
-    /// `description`.
+
     private static func text(for timestamp: Self) -> String {
         func pad(_ value: Int, _ width: Int) -> String {
             let digits = String(abs(value))
@@ -294,9 +200,7 @@ extension RFC_2822.Timestamp {
 }
 
 extension RFC_2822.Timestamp: ASCII.Serializable, Binary.Serializable {
-    /// Serializes the timestamp as RFC 2822 date-time ASCII text.
-    ///
-    /// [FAM-012] text sibling — emits the typed text substrate `ASCII.Code`.
+
     public static func serialize<Buffer: RangeReplaceableCollection>(
         _ timestamp: RFC_2822.Timestamp,
         into buffer: inout Buffer
@@ -304,12 +208,6 @@ extension RFC_2822.Timestamp: ASCII.Serializable, Binary.Serializable {
         for byte in text(for: timestamp).utf8 { buffer.append(ASCII.Code(byte)) }
     }
 
-    /// Serializes the timestamp as RFC 2822 date-time wire bytes.
-    ///
-    /// [FAM-012] binary sibling. Clause-9: an independent body re-emitting
-    /// the value directly into the `Byte` domain — byte-equivalent to the
-    /// text form; the ASCII==Binary equivalence test guards the two bodies
-    /// against drift.
     public static func serialize<Buffer: RangeReplaceableCollection>(
         _ timestamp: RFC_2822.Timestamp,
         into buffer: inout Buffer
@@ -318,30 +216,12 @@ extension RFC_2822.Timestamp: ASCII.Serializable, Binary.Serializable {
     }
 }
 
-// MARK: - ASCII.Parseable ([FAM-012] parse — free-standing init; marker requirement seal-last)
-
 extension RFC_2822.Timestamp: ASCII.Parseable {
 
-    /// Parses a timestamp from ASCII bytes (AUTHORITATIVE IMPLEMENTATION)
-    ///
-    /// Implements the full RFC 2822 Section 3.3 `date-time` grammar —
-    /// `[ day-of-week "," ] date FWS time [CFWS]` — with `obs-zone`
-    /// leniency: named zones (`UT`, `GMT`, `EST`/`EDT`, `CST`/`CDT`,
-    /// `MST`/`MDT`, `PST`/`PDT`) resolve to their fixed offsets; any other
-    /// alphabetic zone token (the single-letter military zones, and any
-    /// unrecognized alphabetic zone) resolves to `.unknown` per Section
-    /// 4.3's "SHOULD all be considered equivalent to '-0000'" guidance.
-    /// `obs-year` 2/3-digit century normalization (Section 4.3) is applied.
-    ///
-    /// - Parameter bytes: The timestamp as ASCII bytes
-    /// - Throws: `Error` if parsing fails
     public init<Bytes: Swift.Collection>(ascii bytes: Bytes) throws(Error)
     where Bytes.Element == Byte {
         guard !bytes.isEmpty else { throw Error.empty }
 
-        // Type-up: lift to ASCII.Code at the entry boundary so the body works
-        // against ASCII.Code constants directly (RFC 2822 timestamp grammar is
-        // strict ASCII).
         var codeArray: [ASCII.Code]
         do throws(ASCII.Code.Error) {
             codeArray = try [ASCII.Code](bytes)
@@ -349,7 +229,6 @@ extension RFC_2822.Timestamp: ASCII.Parseable {
             throw Error.invalidFormat(String(decoding: bytes, as: UTF8.self))
         }
 
-        // Strip leading/trailing whitespace
         while !codeArray.isEmpty
             && (codeArray.first == ASCII.Code.space || codeArray.first == ASCII.Code.htab)
         {
@@ -378,8 +257,6 @@ extension RFC_2822.Timestamp: ASCII.Parseable {
         var idx = 0
         let end = codeArray.count
 
-        // Skips FWS (space/htab runs) and `(...)` comments (nested, with
-        // quoted-pair escapes honored) — the `CFWS` production.
         func skipCFWS() {
             while idx < end {
                 if codeArray[idx] == ASCII.Code.space || codeArray[idx] == ASCII.Code.htab {
@@ -404,8 +281,6 @@ extension RFC_2822.Timestamp: ASCII.Parseable {
             }
         }
 
-        // Peeks (without consuming) a run of `count` letters, lowercased, or
-        // nil if fewer than `count` letters remain at the cursor.
         func peekLetters(_ count: Int) -> String? {
             guard idx + count <= end else { return nil }
             for offset in 0..<count {
@@ -414,7 +289,6 @@ extension RFC_2822.Timestamp: ASCII.Parseable {
             return String(decoding: codeArray[idx..<(idx + count)], as: UTF8.self).lowercased()
         }
 
-        // Consumes 1...max decimal digits, or nil if none are present.
         func parseDigits(max: Int) -> (value: Int, count: Int)? {
             var value = 0
             var count = 0
@@ -426,8 +300,6 @@ extension RFC_2822.Timestamp: ASCII.Parseable {
             return count > 0 ? (value, count) : nil
         }
 
-        // Consumes the `zone` token: numeric `(+|-)HHMM`, or an alphabetic
-        // obs-zone (named or, per §4.3 leniency, unrecognized -> .unknown).
         func parseZone() -> Zone? {
             guard idx < end else { return nil }
             if codeArray[idx] == ASCII.Code.plusSign || codeArray[idx] == ASCII.Code.hyphen {
@@ -458,11 +330,9 @@ extension RFC_2822.Timestamp: ASCII.Parseable {
             case "MDT": return .offset(minutes: -360)
             case "PST": return .offset(minutes: -480)
             case "PDT": return .offset(minutes: -420)
-            default: return .unknown  // obs-zone military / unrecognized alphabetic zone (§4.3)
+            default: return .unknown
             }
         }
-
-        // ===== day-of-week "," (optional) =====
 
         skipCFWS()
         var dayOfWeek: DayOfWeek?
@@ -477,8 +347,6 @@ extension RFC_2822.Timestamp: ASCII.Parseable {
                 idx = beforeDayName
             }
         }
-
-        // ===== date = day month year =====
 
         skipCFWS()
         guard let (dayValue, _) = parseDigits(max: 2) else { throw Error.invalidFormat(original) }
@@ -499,13 +367,11 @@ extension RFC_2822.Timestamp: ASCII.Parseable {
         }
         var year = yearValue
         if yearDigits == 2 {
-            // obs-year §4.3: 00-49 -> 2000-2049, 50-99 -> 1950-1999.
+
             year += yearValue < 50 ? 2000 : 1900
         } else if yearDigits == 3 {
             year += 1900
         }
-
-        // ===== time = time-of-day FWS zone =====
 
         skipCFWS()
         guard let (hourValue, _) = parseDigits(max: 2) else { throw Error.invalidFormat(original) }
@@ -534,7 +400,7 @@ extension RFC_2822.Timestamp: ASCII.Parseable {
             guard let (parsedSecond, _) = parseDigits(max: 2) else {
                 throw Error.invalidFormat(original)
             }
-            // RFC 2822 second = 2DIGIT; tolerate a positive leap second (60).
+
             guard parsedSecond >= 0 && parsedSecond <= 60 else {
                 throw Error.invalidComponent("second", "\(parsedSecond)")
             }
@@ -561,16 +427,10 @@ extension RFC_2822.Timestamp: ASCII.Parseable {
     }
 }
 
-// MARK: - RawRepresentable / CustomStringConvertible
-
 extension RFC_2822.Timestamp: Swift.RawRepresentable {
-    /// The canonical RFC 2822 date-time string form.
-    ///
-    /// Re-provides `Swift.RawRepresentable` directly — the retired
-    /// `Binary.ASCII.RawRepresentable` no longer synthesizes it.
+
     public var rawValue: String { description }
 
-    /// Creates a timestamp by parsing `rawValue`, or `nil` if it is malformed.
     public init?(rawValue: String) {
         do throws(RFC_2822.Timestamp.Error) {
             try self.init(ascii: rawValue.utf8.map { Byte($0) })
@@ -581,8 +441,7 @@ extension RFC_2822.Timestamp: Swift.RawRepresentable {
 }
 
 extension RFC_2822.Timestamp: CustomStringConvertible {
-    /// The timestamp's RFC 2822 date-time text — the same form the
-    /// `ASCII.Serializable` / `Binary.Serializable` verbs emit.
+
     public var description: String {
         Self.text(for: self)
     }

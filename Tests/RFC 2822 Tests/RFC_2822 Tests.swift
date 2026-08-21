@@ -1,16 +1,7 @@
-//
-//  RFC_2822 Tests.swift
-//  swift-rfc-2822
-//
-//  Created by Coen ten Thije Boonkkamp on 26/12/2024.
-//
-
 import Foundation
 import Testing
 
 @testable import RFC_2822
-
-// MARK: - AddrSpec Tests
 
 extension RFC_2822.AddrSpec {
     @Suite("RFC 2822 AddrSpec Tests")
@@ -49,15 +40,14 @@ extension RFC_2822.AddrSpec {
 
         @Test
         func `Successfully creates addr-spec with quoted local part`() throws {
-            // Quoted string with valid qtext (no spaces - space requires FWS handling)
+
             let addr = try RFC_2822.AddrSpec(ascii: Array("\"user.name\"@example.com".utf8))
             #expect(addr.localPart == "\"user.name\"")
         }
 
         @Test
         func `Successfully creates addr-spec with an at sign inside a quoted local part`() throws {
-            // The domain-separating @ must be the LAST @, not the first one found
-            // inside the quoted local-part.
+
             let addr = try RFC_2822.AddrSpec(ascii: Array("\"a@b\"@example.com".utf8))
             #expect(addr.localPart == "\"a@b\"")
             #expect(addr.domain == "example.com")
@@ -138,7 +128,7 @@ extension RFC_2822.AddrSpec {
         func `Successfully tests hashable`() throws {
             var set: Set<RFC_2822.AddrSpec> = []
             set.insert(try RFC_2822.AddrSpec(ascii: Array("user@example.com".utf8)))
-            set.insert(try RFC_2822.AddrSpec(ascii: Array("user@example.com".utf8)))  // Duplicate
+            set.insert(try RFC_2822.AddrSpec(ascii: Array("user@example.com".utf8)))
             set.insert(try RFC_2822.AddrSpec(ascii: Array("other@example.com".utf8)))
             #expect(set.count == 2)
         }
@@ -160,21 +150,7 @@ extension RFC_2822.AddrSpec {
 }
 
 extension RFC_2822.AddrSpec.Test {
-    /// F-002 residual-bypass audit (revision 1): investigated whether
-    /// `AddrSpec`'s Codable decode could bypass `validateLocalPart`/
-    /// `validateDomain` the way the adversarial pre-review described for
-    /// `Mailbox` (a compiler-synthesized, dictionary-shaped `init(from:)`
-    /// assigning stored properties straight from untrusted JSON). It
-    /// cannot: `AddrSpec` also conforms to `Swift.RawRepresentable`
-    /// (`RawValue == String`), so its `Codable` conformance resolves to the
-    /// Swift standard library's raw-value-based witness instead of
-    /// per-property synthesis — CONFIRMED empirically
-    /// (`JSONEncoder().encode(addrSpec)` produces a bare JSON string, not
-    /// `{"localPart":...,"domain":...}`). Decoding a bare string routes
-    /// through `init?(rawValue:)` -> `self.init(ascii:)`, which was ALREADY
-    /// fully grammar-validating before this revision. These tests exercise
-    /// the REAL decode path and pass both before and after this revision —
-    /// recorded as a confirmed-safe finding, not a red -> green regression.
+
     @Suite
     struct `Edge Case` {
         @Test
@@ -195,11 +171,7 @@ extension RFC_2822.AddrSpec.Test {
         func `Rejects a dictionary-shaped payload — never the real wire shape to begin with`()
             throws
         {
-            // A `{"localPart":...,"domain":...}` object is what naive
-            // per-property Codable synthesis would use, and what the
-            // adversarial-review claim assumed. It is rejected here too,
-            // but only because it doesn't match the actual (raw-string)
-            // wire shape — not because validation caught anything.
+
             let json = Data(
                 """
                 {"localPart":"user","domain":"example.com"}
@@ -223,8 +195,6 @@ extension RFC_2822.AddrSpec.Test {
         }
     }
 }
-
-// MARK: - Mailbox Tests
 
 extension RFC_2822.Mailbox {
     @Suite("RFC 2822 Mailbox Tests")
@@ -302,11 +272,7 @@ extension RFC_2822.Mailbox {
 }
 
 extension RFC_2822.Mailbox.Test {
-    /// F-002 regression coverage: display-name construction and parsing
-    /// reject header injection (an embedded CR/LF that would let
-    /// attacker-controlled input forge additional header lines), and the
-    /// serializer quoted-pair escapes embedded `"` / `\` rather than
-    /// emitting them bare inside the quoted-string.
+
     @Suite
     struct `Edge Case` {
         @Test
@@ -341,9 +307,7 @@ extension RFC_2822.Mailbox.Test {
 
         @Test
         func `Rejects a header-injection payload parsed from wire text too`() throws {
-            // The same invariant holds on the ASCII.Parseable path, not just
-            // the public initializer — a parse -> re-serialize round trip
-            // must not be able to replay attacker-controlled bytes.
+
             let malicious = "Evil\r\nBcc: attacker@evil.example <john@example.com>"
             #expect(throws: RFC_2822.Mailbox.Error.self) {
                 _ = try RFC_2822.Mailbox(ascii: Array(malicious.utf8))
@@ -375,28 +339,6 @@ extension RFC_2822.Mailbox.Test {
             let reparsed = try RFC_2822.Mailbox(ascii: ascii.map(\.byte))
             #expect(reparsed.emailAddress == original.emailAddress)
         }
-
-        // MARK: - F-002 residual-bypass audit (revision 1): the Codable
-        // decode path
-        //
-        // An adversarial pre-review claimed `Mailbox`'s COMPILER-SYNTHESIZED
-        // `init(from:)` assigned `displayName` directly from decoded
-        // dictionary-shaped JSON (e.g. `{"displayName":"Evil\r\nBcc:
-        // x@evil","emailAddress":{...}}`), never calling
-        // `validateDisplayName`. Verifying this claim empirically (decoding
-        // exactly that dictionary shape) shows it does NOT reproduce against
-        // the actual branch: `Mailbox` also conforms to
-        // `Swift.RawRepresentable` (`RawValue == String`, below), so its
-        // real `Codable` conformance resolves to the Swift standard
-        // library's raw-value-based witness instead of per-property
-        // synthesis (CONFIRMED — `JSONEncoder().encode(mailbox)` produces a
-        // bare string, e.g. `"John <john@example.com>"`, never the
-        // dictionary shape). Decoding therefore already routes through
-        // `init?(rawValue:)` -> `self.init(ascii:)`, the SAME wire-text
-        // parser F-002 validated. These tests exercise the REAL decode path
-        // (a bare JSON string) and the (never-real) dictionary shape, and
-        // both pass before and after this revision — recorded as a
-        // confirmed-safe finding, not a red -> green regression test.
 
         @Test
         func `Rejects a Codable-decoded raw string carrying a CRLF header-injection payload`()
@@ -440,10 +382,7 @@ extension RFC_2822.Mailbox.Test {
         func `Rejects a dictionary-shaped payload — never the real wire shape to begin with`()
             throws
         {
-            // The adversarial-review claim's exact hypothetical payload.
-            // Rejected here too, but only because it doesn't match the
-            // actual (raw-string) wire shape, not because validation caught
-            // the embedded CRLF specifically.
+
             let json = Data(
                 """
                 {"displayName":"Evil\\r\\nBcc: attacker@evil.example","emailAddress":{"localPart":"user","domain":"example.com"}}
@@ -467,8 +406,6 @@ extension RFC_2822.Mailbox.Test {
         }
     }
 }
-
-// MARK: - Address Tests
 
 extension RFC_2822.Address {
     @Suite("RFC 2822 Address Tests")
@@ -541,17 +478,7 @@ extension RFC_2822.Address {
 }
 
 extension RFC_2822.Address.Test {
-    /// F-005 regression coverage: the group-vs-mailbox `":"` scan is
-    /// quote-aware, so a colon embedded in a quoted display name is not
-    /// mistaken for the `display-name ":" mailbox-list ";"` group separator.
-    ///
-    /// Also carries F-002 residual-bypass audit coverage: `Address.Kind`'s
-    /// `group` case holds its own display-name `String`, independent of
-    /// `Mailbox.displayName`, validated by neither the `ASCII.Parseable`
-    /// wire parser nor the compiler-synthesized `Decodable` pre-fix — and
-    /// `Address`'s serializers apply NO escaping to it at all (not even the
-    /// quoted-pair escaping `Mailbox` applies). See the tests below this
-    /// suite's F-005 cases.
+
     @Suite
     struct `Edge Case` {
         @Test
@@ -580,42 +507,12 @@ extension RFC_2822.Address.Test {
             #expect(mailboxes.count == 2)
         }
 
-        // MARK: - F-002 residual-bypass audit (revision 1): Address.Kind
-        // .group's own display name, on both the wire-parse and
-        // Codable-decode paths.
-        //
-        // Two DIFFERENT decode surfaces exist here, and they needed two
-        // different fixes:
-        //  1. `RFC_2822.Address` itself is `Swift.RawRepresentable`
-        //     (`RawValue == String`), so `JSONDecoder().decode(Address.self,
-        //     from:)` decodes a bare JSON string and routes through
-        //     `init?(rawValue:)` -> `self.init(ascii:)` — this is a REAL
-        //     bypass this revision fixes: `init(ascii:)`'s group branch had
-        //     NO display-name validation pre-revision (unrelated to F-002's
-        //     original `Mailbox`-only scope). Tests below decode a bare
-        //     string and assert rejection.
-        //  2. `RFC_2822.Address.Kind` is NOT `RawRepresentable`, so a BARE
-        //     `Kind` value (e.g. `JSONDecoder().decode(Kind.self, from:)`,
-        //     reachable if `Kind` is used as a payload anywhere without the
-        //     `Address` wrapper) decodes via ordinary compiler-synthesized
-        //     enum Codable — CONFIRMED empirically to use a keyed container
-        //     with positional keys `_0`/`_1` under the case name (e.g.
-        //     `{"group":{"_0":"Team","_1":[]}}`), and pre-revision this had
-        //     NO validation at all for the `group` case's display name —
-        //     the genuinely reachable, previously-unidentified bypass this
-        //     revision closes. Tests below use that real shape.
-
         @Test
         func
             `Rejects a group display name carrying a CRLF header-injection payload parsed from wire text`()
             throws
         {
-            // The group-separator colon must appear exactly once, right
-            // before a well-formed mailbox list — a colon inside the
-            // injected payload itself would be picked up as (the wrong)
-            // group separator and fail for an unrelated reason (a malformed
-            // mailbox-list fragment), which wouldn't actually demonstrate
-            // the missing display-name validation this fixes.
+
             let malicious = "Evil\r\nBcc-attacker-evil-example:john@example.com;"
             #expect(throws: RFC_2822.Address.Error.self) {
                 _ = try RFC_2822.Address(ascii: Array(malicious.utf8))
@@ -626,9 +523,7 @@ extension RFC_2822.Address.Test {
         func `Rejects a Codable-decoded Address raw string whose group display name carries CRLF`()
             throws
         {
-            // Same single-colon shape as the wire-parse test above, for the
-            // same reason (an ambiguous second colon would fail for an
-            // unrelated malformed-mailbox-list reason instead).
+
             let json = Data(
                 """
                 "Evil\\r\\nBcc-attacker-evil-example:john@example.com;"
@@ -731,19 +626,13 @@ extension RFC_2822.Address.Test {
     }
 }
 
-// MARK: - Message.ID Tests
-
 extension RFC_2822.Message.ID {
     @Suite("RFC 2822 Message.ID Tests")
     struct Test {
-        // MARK: - [FAM-012] Format Sibling Tests (drain → flat siblings)
 
         @Test
         func `ASCII and Binary serialization are byte-equivalent`() throws {
-            // Escape/encode drain conformer: the two format-sibling bodies — the
-            // ASCII.Serializable text verb (ASCII.Code) and the Binary.Serializable
-            // wire verb (Byte) — MUST produce byte-identical output. This guards the
-            // two independent (no-`.serialized`-detour) bodies against drift.
+
             let ids = [
                 try RFC_2822.Message.ID(ascii: Array("<unique-id@example.com>".utf8)),
                 try RFC_2822.Message.ID(ascii: Array("<abc.def.123@mail.example.com>".utf8)),
@@ -865,8 +754,6 @@ extension RFC_2822.Message.ID {
     }
 }
 
-// MARK: - Timestamp Tests
-
 extension RFC_2822.Timestamp {
     @Suite("RFC 2822 Timestamp Tests")
     struct Test {
@@ -891,7 +778,7 @@ extension RFC_2822.Timestamp {
             var set: Set<RFC_2822.Timestamp> = []
 
             set.insert(RFC_2822.Timestamp(secondsSinceEpoch: 1000.0))
-            set.insert(RFC_2822.Timestamp(secondsSinceEpoch: 1000.0))  // Duplicate
+            set.insert(RFC_2822.Timestamp(secondsSinceEpoch: 1000.0))
             set.insert(RFC_2822.Timestamp(secondsSinceEpoch: 2000.0))
 
             #expect(set.count == 2)
@@ -938,10 +825,7 @@ extension RFC_2822.Timestamp {
 }
 
 extension RFC_2822.Timestamp.Test {
-    /// F-001 regression coverage: the wire form is the full RFC 2822
-    /// Section 3.3 `date-time` grammar (day-of-week, date, time-of-day,
-    /// zone) — not a bare numeric epoch — with `obs-zone` leniency and
-    /// `obs-year` century normalization on parse.
+
     @Suite
     struct `Edge Case` {
         @Test
@@ -996,7 +880,7 @@ extension RFC_2822.Timestamp.Test {
             let known = try RFC_2822.Timestamp(ascii: Array("21 Nov 1997 09:55:06 +0000".utf8))
             #expect(unknown.zone == .unknown)
             #expect(known.zone == .offset(minutes: 0))
-            // Both denote the same instant regardless of the zone-knowledge distinction.
+
             #expect(unknown.secondsSinceEpoch == known.secondsSinceEpoch)
         }
 
@@ -1010,11 +894,7 @@ extension RFC_2822.Timestamp.Test {
 }
 
 extension RFC_2822.Timestamp.Test {
-    /// B2-19 (url-routing-stack-first-principles-review): this type retires
-    /// swift-mailgun-types' hand-rolled `rfc2822Formatter`
-    /// (`DateFormatter` with `"EEE, dd MMM yyyy HH:mm:ss Z"`, en_US_POSIX,
-    /// GMT). These tests pin the mailgun wire shape: parse and print must
-    /// round-trip that fixed-format form byte-identically.
+
     @Suite
     struct Integration {
         @Test
@@ -1039,15 +919,12 @@ extension RFC_2822.Timestamp.Test {
 
         @Test
         func `Epoch-constructed timestamp prints the exact mailgun formatter output`() {
-            // rfc2822Formatter.string(from: Date(timeIntervalSince1970: 1234567890))
-            // == "Fri, 13 Feb 2009 23:31:30 +0000" (en_US_POSIX, GMT).
+
             let timestamp = RFC_2822.Timestamp(secondsSinceEpoch: 1_234_567_890)
             #expect(timestamp.description == "Fri, 13 Feb 2009 23:31:30 +0000")
         }
     }
 }
-
-// MARK: - Fields Tests
 
 extension RFC_2822.Fields {
     @Suite("RFC 2822 Fields Tests")
@@ -1175,10 +1052,7 @@ extension RFC_2822.Fields {
 }
 
 extension RFC_2822.Fields.Test {
-    /// F-005 regression coverage: comma-splitting a `From`/`To`/`Cc`/`Bcc`
-    /// mailbox-address list is quote- and angle-addr-aware, so a comma
-    /// embedded in a quoted display name does not fracture one mailbox into
-    /// two bogus fragments.
+
     @Suite
     struct `Edge Case` {
         @Test
@@ -1203,8 +1077,6 @@ extension RFC_2822.Fields.Test {
         }
     }
 }
-
-// MARK: - Message Tests
 
 extension RFC_2822.Message {
     @Suite("RFC 2822 Message Tests")
@@ -1311,8 +1183,6 @@ extension RFC_2822.Message {
     }
 }
 
-// MARK: - Message.Body Tests
-
 extension RFC_2822.Message.Body {
     @Suite("RFC 2822 Message.Body Tests")
     struct Test {
@@ -1324,7 +1194,7 @@ extension RFC_2822.Message.Body {
 
         @Test
         func `Successfully creates body from bytes`() {
-            let bytes: [Byte] = [72, 101, 108, 108, 111]  // "Hello"
+            let bytes: [Byte] = [72, 101, 108, 108, 111]
             let body = RFC_2822.Message.Body(bytes)
             #expect(body.bytes == bytes)
         }
@@ -1369,21 +1239,13 @@ extension RFC_2822.Message.Body {
     }
 }
 
-// MARK: - [FAM-012] ASCII==Binary Equivalence
-
-/// Each dual-sibling conformer's `ASCII.Serializable` verb (emitting `ASCII.Code`)
-/// and `Binary.Serializable` verb (emitting `Byte`) MUST produce byte-identical
-/// output. With strict clause-9 composition, this holds through every nesting
-/// level — the guard against the two independent bodies drifting apart. (`Body`
-/// and `Message` are byte-domain / `Binary`-only, so they have no ASCII verb to
-/// compare and are excluded by construction.)
 @Suite("RFC 2822 [FAM-012] ASCII==Binary Equivalence")
 struct ASCIIBinaryEquivalenceTests {
     private func addrSpec() throws -> RFC_2822.AddrSpec {
         try RFC_2822.AddrSpec(localPart: "john", domain: "example.com")
     }
     private func mailbox() throws -> RFC_2822.Mailbox {
-        // Display name with a comma forces the quoting (escape) path.
+
         try RFC_2822.Mailbox(displayName: "Doe, John", emailAddress: try addrSpec())
     }
 

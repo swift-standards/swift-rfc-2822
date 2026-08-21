@@ -1,41 +1,10 @@
-// ===----------------------------------------------------------------------===//
-//
-// This source file is part of the swift-rfc-2822 open source project
-//
-// Copyright (c) 2025 Coen ten Thije Boonkkamp
-// Licensed under Apache License v2.0
-//
-// See LICENSE.txt for license information
-//
-// SPDX-License-Identifier: Apache-2.0
-//
-// ===----------------------------------------------------------------------===//
-
 public import ASCII_Serializer_Primitives
 public import Binary_Serializable_Primitives
 import INCITS_4_1986
 public import Parseable_ASCII_Primitives
 
 extension RFC_2822.Message {
-    /// Block of resent fields
-    ///
-    /// Per RFC 2822 Section 3.6.6, resent fields provide trace information
-    /// when a message is resent. They appear as a group:
-    /// - Resent-Date (required in block)
-    /// - Resent-From (required in block)
-    /// - Resent-Sender (optional)
-    /// - Resent-To (optional)
-    /// - Resent-Cc (optional)
-    /// - Resent-Bcc (optional)
-    /// - Resent-Message-ID (optional)
-    ///
-    /// ## Example
-    ///
-    /// ```swift
-    /// let block = try RFC_2822.Message.ResentBlock(
-    ///     ascii: "Resent-Date: 1234567890\r\nResent-From: user@example.com".utf8
-    /// )
-    /// ```
+
     public struct ResentBlock: Hashable, Sendable, Codable {
         public let timestamp: RFC_2822.Timestamp
         public let from: [RFC_2822.Mailbox]
@@ -45,7 +14,6 @@ extension RFC_2822.Message {
         public let bcc: [RFC_2822.Address]?
         public let messageID: ID?
 
-        /// Creates a resent block WITHOUT validation
         init(
             __unchecked: Void,
             timestamp: RFC_2822.Timestamp,
@@ -65,7 +33,6 @@ extension RFC_2822.Message {
             self.messageID = messageID
         }
 
-        /// Creates a resent block with required and optional fields
         public init(
             timestamp: RFC_2822.Timestamp,
             from: [RFC_2822.Mailbox],
@@ -89,14 +56,8 @@ extension RFC_2822.Message {
     }
 }
 
-// MARK: - ASCII.Serializable / Binary.Serializable ([FAM-012] format siblings)
-
 extension RFC_2822.Message.ResentBlock: ASCII.Serializable, Binary.Serializable {
-    /// Serializes the resent block as `Resent-*:` field lines (ASCII text).
-    ///
-    /// [FAM-012] text sibling — composes `Timestamp` / `Mailbox` / `Address` /
-    /// `Message.ID` ASCII verbs directly (clause-9: ASCII verb → sub-part ASCII
-    /// verbs; no `.description` / `.serialized` detour).
+
     public static func serialize<Buffer: RangeReplaceableCollection>(
         _ block: RFC_2822.Message.ResentBlock,
         into buffer: inout Buffer
@@ -162,11 +123,6 @@ extension RFC_2822.Message.ResentBlock: ASCII.Serializable, Binary.Serializable 
         }
     }
 
-    /// Serializes the resent block as `Resent-*:` field lines (wire bytes).
-    ///
-    /// [FAM-012] binary sibling. Clause-9: composes the sub-part Byte verbs
-    /// directly (Byte verb → sub-part Byte verbs) — never a `.description` /
-    /// `.serialized` detour.
     public static func serialize<Buffer: RangeReplaceableCollection>(
         _ block: RFC_2822.Message.ResentBlock,
         into buffer: inout Buffer
@@ -233,30 +189,12 @@ extension RFC_2822.Message.ResentBlock: ASCII.Serializable, Binary.Serializable 
     }
 }
 
-// MARK: - ASCII.Parseable ([FAM-012] parse — free-standing init; marker requirement seal-last)
-
 extension RFC_2822.Message.ResentBlock: ASCII.Parseable {
 
-    /// Parses a resent block from ASCII bytes (AUTHORITATIVE IMPLEMENTATION)
-    ///
-    /// ## RFC 2822 Section 3.6.6
-    ///
-    /// Resent fields appear as a block with required Resent-Date and Resent-From.
-    ///
-    /// ## Category Theory
-    ///
-    /// Parsing transformation:
-    /// - **Domain**: [Byte] (ASCII bytes)
-    /// - **Codomain**: RFC_2822.Message.ResentBlock (structured data)
-    ///
-    /// - Parameter bytes: The resent block as ASCII bytes
-    /// - Throws: `Error` if parsing fails
     public init<Bytes: Swift.Collection>(ascii bytes: Bytes) throws(Error)
     where Bytes.Element == Byte {
         guard !bytes.isEmpty else { throw Error.empty }
 
-        // Type-up: lift to ASCII.Code at the entry boundary so the body works
-        // against ASCII.Code constants directly (RFC 2822 grammar is strict ASCII).
         let codeArray: [ASCII.Code]
         do throws(ASCII.Code.Error) {
             codeArray = try [ASCII.Code](bytes)
@@ -264,7 +202,6 @@ extension RFC_2822.Message.ResentBlock: ASCII.Parseable {
             throw Error.missingResentDate(String(decoding: bytes, as: UTF8.self))
         }
 
-        // Helper to trim whitespace from code array
         func trimWhitespace(_ arr: [ASCII.Code]) -> [ASCII.Code] {
             var result = arr
             while !result.isEmpty
@@ -280,10 +217,6 @@ extension RFC_2822.Message.ResentBlock: ASCII.Parseable {
             return result
         }
 
-        // Helper to split codes on separator, treating a `"..."`
-        // quoted-string span or a `<...>` angle-addr span as opaque — F-005:
-        // a separator byte inside either span is NOT a structural split
-        // point (`"Doe, John" <j@d.com>` in Resent-From/-To/-Cc/-Bcc lists).
         func splitCodes(_ arr: [ASCII.Code], on separator: ASCII.Code) -> [[ASCII.Code]] {
             var result: [[ASCII.Code]] = []
             var current: [ASCII.Code] = []
@@ -314,7 +247,6 @@ extension RFC_2822.Message.ResentBlock: ASCII.Parseable {
             return result
         }
 
-        // Split into lines (on CR or LF)
         var lines: [[ASCII.Code]] = []
         var currentLine: [ASCII.Code] = []
         for code in codeArray {
@@ -340,7 +272,7 @@ extension RFC_2822.Message.ResentBlock: ASCII.Parseable {
         var messageID: RFC_2822.Message.ID?
 
         for line in lines {
-            // Find colon separator
+
             guard let colonIndex = line.firstIndex(of: ASCII.Code.colon) else { continue }
 
             let fieldNameCodes = trimWhitespace(Array(line[..<colonIndex]))
@@ -356,7 +288,7 @@ extension RFC_2822.Message.ResentBlock: ASCII.Parseable {
                 }
 
             case "resent-from":
-                // Parse comma-separated mailboxes
+
                 let mailboxCodeArrays = splitCodes(fieldValueCodes, on: ASCII.Code.comma)
                 for mailboxCodes in mailboxCodeArrays {
                     let trimmed = trimWhitespace(mailboxCodes)
@@ -449,15 +381,6 @@ extension RFC_2822.Message.ResentBlock: ASCII.Parseable {
         )
     }
 
-    /// Runs `parse` and returns `nil` when it fails.
-    ///
-    /// A `Resent-*` block is trace information appended by relays, and this parser
-    /// reads it leniently: an individual malformed field is dropped rather than
-    /// failing the whole block. The two fields that are *not* optional —
-    /// `Resent-Date` and `Resent-From` — are enforced by the `guard`s after the
-    /// field loop, which report ``Error/missingResentDate`` /
-    /// ``Error/missingResentFrom`` instead. Dropping here is therefore the total
-    /// answer for this field, not a swallowed error.
     private static func leniently<Value, Failure: Swift.Error>(
         _ parse: () throws(Failure) -> Value
     ) -> Value? {
@@ -469,16 +392,10 @@ extension RFC_2822.Message.ResentBlock: ASCII.Parseable {
     }
 }
 
-// MARK: - RawRepresentable / CustomStringConvertible
-
 extension RFC_2822.Message.ResentBlock: Swift.RawRepresentable {
-    /// The canonical `Resent-*:` field-block string form.
-    ///
-    /// Re-provides `Swift.RawRepresentable` directly — the retired
-    /// `Binary.ASCII.RawRepresentable` no longer synthesizes it.
+
     public var rawValue: String { description }
 
-    /// Creates a resent block by parsing `rawValue`, or `nil` if it is malformed.
     public init?(rawValue: String) {
         do throws(RFC_2822.Message.ResentBlock.Error) {
             try self.init(ascii: rawValue.utf8.map { Byte($0) })
@@ -489,8 +406,7 @@ extension RFC_2822.Message.ResentBlock: Swift.RawRepresentable {
 }
 
 extension RFC_2822.Message.ResentBlock: CustomStringConvertible {
-    /// The resent block as `Resent-*:` field lines — the same grammar the
-    /// `ASCII.Serializable` / `Binary.Serializable` verbs emit.
+
     public var description: String {
         var lines: [String] = []
         lines.append("Resent-Date: \(timestamp)")

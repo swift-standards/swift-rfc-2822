@@ -1,13 +1,5 @@
-//
-//  RFC_2822.Fields.Error.swift
-//  swift-rfc-2822
-//
-//  Error type for RFC_2822.Fields
-//
-
 extension RFC_2822.Fields {
 
-    /// Errors during fields parsing
     public enum Error: Swift.Error, Sendable, Equatable, CustomStringConvertible {
         case empty
         case missingRequiredField(_ fieldName: String)

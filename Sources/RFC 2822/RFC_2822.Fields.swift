@@ -1,63 +1,35 @@
-// ===----------------------------------------------------------------------===//
-//
-// This source file is part of the swift-rfc-2822 open source project
-//
-// Copyright (c) 2025 Coen ten Thije Boonkkamp
-// Licensed under Apache License v2.0
-//
-// See LICENSE.txt for license information
-//
-// SPDX-License-Identifier: Apache-2.0
-//
-// ===----------------------------------------------------------------------===//
-
 public import ASCII_Serializer_Primitives
 public import Binary_Serializable_Primitives
 import INCITS_4_1986
 public import Parseable_ASCII_Primitives
 
 extension RFC_2822 {
-    /// Message fields as defined in RFC 2822 Section 3.6
-    ///
-    /// Per RFC 2822:
-    /// ```
-    /// fields = *(trace *resent-field) *orig-date *from
-    ///          [sender] [reply-to] *to *cc *bcc
-    ///          [message-id] [in-reply-to] [references]
-    ///          [subject] [comments] [keywords]
-    /// ```
+
     public struct Fields: Sendable, Codable {
-        // Required fields
+
         public let originationDate: RFC_2822.Timestamp
         public let from: [Mailbox]
 
-        // Optional originator fields
         public let sender: Mailbox?
         public let replyTo: [Address]?
 
-        // Optional destination fields
         public let to: [Address]?
         public let cc: [Address]?
         public let bcc: [Address]?
 
-        // Optional identification fields
         public let messageID: Message.ID?
         public let inReplyTo: [Message.ID]?
         public let references: [Message.ID]?
 
-        // Optional informational fields
         public let subject: String?
         public let comments: String?
         public let keywords: [String]?
 
-        // Trace fields (optional but important)
         public let receivedFields: [Message.Received]
         public let returnPath: Message.Path?
 
-        // Resent fields (optional block)
         public let resentFields: [Message.ResentBlock]
 
-        /// Creates fields WITHOUT validation
         init(
             __unchecked: Void,
             originationDate: RFC_2822.Timestamp,
@@ -133,27 +105,18 @@ extension RFC_2822 {
                 resentFields: resentFields
             )
 
-            // Validate sender field requirement per RFC 2822 3.6.2
             if from.count > 1 && sender == nil {
-                // RFC 2822 requires sender field when from has multiple mailboxes
+
                 assertionFailure("Sender field required when From contains multiple mailboxes")
             }
         }
     }
 }
 
-// MARK: - Hashable
-
 extension RFC_2822.Fields: Hashable {}
 
-// MARK: - ASCII.Serializable / Binary.Serializable ([FAM-012] format siblings)
-
 extension RFC_2822.Fields: ASCII.Serializable, Binary.Serializable {
-    /// Serializes the header fields as a `field-name: value` block (ASCII text).
-    ///
-    /// [FAM-012] text sibling — composes every sub-part's ASCII verb directly
-    /// (clause-9: ASCII verb → sub-part ASCII verbs; no `.description` /
-    /// `.serialized` detour). The resent block composes `ResentBlock`'s own verb.
+
     public static func serialize<Buffer: RangeReplaceableCollection>(
         _ fields: RFC_2822.Fields,
         into buffer: inout Buffer
@@ -269,11 +232,6 @@ extension RFC_2822.Fields: ASCII.Serializable, Binary.Serializable {
         }
     }
 
-    /// Serializes the header fields as a `field-name: value` block (wire bytes).
-    ///
-    /// [FAM-012] binary sibling. Clause-9: composes every sub-part's Byte verb
-    /// directly (Byte verb → sub-part Byte verbs) — never a `.description` /
-    /// `.serialized` detour.
     public static func serialize<Buffer: RangeReplaceableCollection>(
         _ fields: RFC_2822.Fields,
         into buffer: inout Buffer
@@ -390,25 +348,12 @@ extension RFC_2822.Fields: ASCII.Serializable, Binary.Serializable {
     }
 }
 
-// MARK: - ASCII.Parseable ([FAM-012] parse — free-standing init; marker requirement seal-last)
-
 extension RFC_2822.Fields: ASCII.Parseable {
 
-    /// Parses fields from ASCII bytes (AUTHORITATIVE IMPLEMENTATION)
-    ///
-    /// ## RFC 2822 Section 3.6
-    ///
-    /// Parses header fields line by line. Each field is `field-name: field-body CRLF`.
-    /// Supports header folding (continuation lines starting with whitespace).
-    ///
-    /// - Parameter bytes: The header fields as ASCII bytes
-    /// - Throws: `Error` if parsing fails
     public init<Bytes: Swift.Collection>(ascii bytes: Bytes) throws(Error)
     where Bytes.Element == Byte {
         guard !bytes.isEmpty else { throw Error.empty }
 
-        // Type-up: lift to ASCII.Code at the entry boundary so the body works
-        // against ASCII.Code constants directly (RFC 2822 grammar is strict ASCII).
         let codeArray: [ASCII.Code]
         do throws(ASCII.Code.Error) {
             codeArray = try [ASCII.Code](bytes)
@@ -416,7 +361,6 @@ extension RFC_2822.Fields: ASCII.Parseable {
             throw Error.invalidFieldFormat("", String(decoding: bytes, as: UTF8.self))
         }
 
-        // Helper: trim whitespace from code array
         func trimWhitespace(_ input: [ASCII.Code]) -> [ASCII.Code] {
             var result = input
             while !result.isEmpty
@@ -432,29 +376,18 @@ extension RFC_2822.Fields: ASCII.Parseable {
             return result
         }
 
-        // Helper: check if codes equal string (case-insensitive)
         func codesEqualCaseInsensitive(_ codes: [ASCII.Code], _ string: String) -> Bool {
             let stringCodes: [ASCII.Code]
             do throws(ASCII.Code.Error) {
                 stringCodes = try [ASCII.Code](string.utf8)
             } catch {
-                // REASON: a non-ASCII comparand can never equal a sequence of
-                // `ASCII.Code`, so `false` is the total answer, not a swallow. All 13
-                // call sites pass an ASCII field-name literal ("date", "from", …), so
-                // this branch is unreachable today.
+
                 return false
             }
             guard codes.count == stringCodes.count else { return false }
             return zip(codes, stringCodes).allSatisfy { $0.lowercased() == $1.lowercased() }
         }
 
-        // Helper: split codes by separator, treating a `"..."` quoted-string
-        // span or a `<...>` angle-addr span as opaque — a separator byte
-        // inside either span is NOT a structural split point. Fixes F-005:
-        // a naive byte-blind split broke `"Doe, John" <j@d.com>` (the comma
-        // inside the quoted display name) into two bogus mailbox fragments.
-        // Mirrors the quote/bracket-aware group-member split `Address`'s own
-        // parser already uses.
         func splitCodes(_ codes: [ASCII.Code], separator: ASCII.Code) -> [[ASCII.Code]] {
             var result: [[ASCII.Code]] = []
             var current: [ASCII.Code] = []
@@ -481,7 +414,6 @@ extension RFC_2822.Fields: ASCII.Parseable {
             return result
         }
 
-        // Parse headers into name-value code pairs
         var headers: [(nameCodes: [ASCII.Code], valueCodes: [ASCII.Code])] = []
         var currentLine: [ASCII.Code] = []
 
@@ -491,18 +423,17 @@ extension RFC_2822.Fields: ASCII.Parseable {
 
             if code == ASCII.Code.cr && i + 1 < codeArray.count && codeArray[i + 1] == ASCII.Code.lf
             {
-                // CRLF found
+
                 i += 2
 
-                // Check if next line is a continuation (starts with space/tab)
                 if i < codeArray.count
                     && (codeArray[i] == ASCII.Code.space || codeArray[i] == ASCII.Code.htab)
                 {
-                    // Folded header - continue current line
+
                     currentLine.append(ASCII.Code.space)
-                    i += 1  // Skip the leading whitespace
+                    i += 1
                 } else {
-                    // End of this header field
+
                     if !currentLine.isEmpty {
                         if let colonIdx = currentLine.firstIndex(of: ASCII.Code.colon) {
                             let nameCodes = trimWhitespace(Array(currentLine[..<colonIdx]))
@@ -513,7 +444,7 @@ extension RFC_2822.Fields: ASCII.Parseable {
                     currentLine = []
                 }
             } else if code == ASCII.Code.lf {
-                // LF only (lenient parsing)
+
                 i += 1
 
                 if i < codeArray.count
@@ -537,7 +468,6 @@ extension RFC_2822.Fields: ASCII.Parseable {
             }
         }
 
-        // Don't forget the last line
         if !currentLine.isEmpty {
             if let colonIdx = currentLine.firstIndex(of: ASCII.Code.colon) {
                 let nameCodes = trimWhitespace(Array(currentLine[..<colonIdx]))
@@ -546,7 +476,6 @@ extension RFC_2822.Fields: ASCII.Parseable {
             }
         }
 
-        // Extract field values
         var date: RFC_2822.Timestamp?
         var from: [RFC_2822.Mailbox] = []
         var sender: RFC_2822.Mailbox?
@@ -573,7 +502,7 @@ extension RFC_2822.Fields: ASCII.Parseable {
                     )
                 }
             } else if codesEqualCaseInsensitive(nameCodes, "from") {
-                // Parse comma-separated mailboxes
+
                 let parts = splitCodes(valueCodes, separator: ASCII.Code.comma)
                 for part in parts {
                     let trimmed = trimWhitespace(part)
@@ -660,7 +589,7 @@ extension RFC_2822.Fields: ASCII.Parseable {
                 }
             } else if codesEqualCaseInsensitive(nameCodes, "in-reply-to") {
                 var ids: [RFC_2822.Message.ID] = []
-                // Message IDs are space-separated
+
                 let parts = splitCodes(valueCodes, separator: ASCII.Code.space)
                 for part in parts {
                     let trimmed = trimWhitespace(part)
@@ -697,10 +626,9 @@ extension RFC_2822.Fields: ASCII.Parseable {
                 let parts = splitCodes(valueCodes, separator: ASCII.Code.comma)
                 keywords = parts.map { String(decoding: trimWhitespace($0), as: UTF8.self) }
             }
-            // Ignore unknown fields
+
         }
 
-        // Validate required fields
         guard let originationDate = date else {
             throw Error.missingRequiredField("Date")
         }
@@ -723,23 +651,17 @@ extension RFC_2822.Fields: ASCII.Parseable {
             subject: subject,
             comments: comments,
             keywords: keywords,
-            receivedFields: [],  // TODO: Parse trace fields
+            receivedFields: [],
             returnPath: nil,
             resentFields: []
         )
     }
 }
 
-// MARK: - RawRepresentable / CustomStringConvertible
-
 extension RFC_2822.Fields: Swift.RawRepresentable {
-    /// The canonical header-field-block string form.
-    ///
-    /// Re-provides `Swift.RawRepresentable` directly — the retired
-    /// `Binary.ASCII.RawRepresentable` no longer synthesizes it.
+
     public var rawValue: String { description }
 
-    /// Creates fields by parsing `rawValue`, or `nil` if they are malformed.
     public init?(rawValue: String) {
         do throws(RFC_2822.Fields.Error) {
             try self.init(ascii: rawValue.utf8.map { Byte($0) })
@@ -750,9 +672,7 @@ extension RFC_2822.Fields: Swift.RawRepresentable {
 }
 
 extension RFC_2822.Fields: CustomStringConvertible {
-    /// The header fields as a `field-name: value` block — derived from the
-    /// `Binary.Serializable` verb (the retired `Binary.ASCII` tier formerly
-    /// synthesized this from the serialized form).
+
     public var description: String {
         var out: [Byte] = []
         RFC_2822.Fields.serialize(self, into: &out)
