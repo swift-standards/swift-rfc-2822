@@ -24,20 +24,20 @@ let package = Package(
     ],
     dependencies: [
         .package(
-            url: "https://github.com/swift-primitives/swift-binary-primitives.git",
+            url: "https://github.com/swift-molecules/swift-binary.git",
             branch: "main"
         ),
         .package(
-            url: "https://github.com/swift-primitives/swift-ascii-serializer-primitives.git",
+            url: "https://github.com/swift-molecules/swift-ascii-serializer.git",
             branch: "main"
         ),
         .package(
-            url: "https://github.com/swift-primitives/swift-ascii-parser-primitives.git",
+            url: "https://github.com/swift-molecules/swift-ascii-parser.git",
             branch: "main"
         ),
         .package(url: "https://github.com/swift-incits/swift-incits-4-1986.git", branch: "main"),
         .package(
-            url: "https://github.com/swift-primitives/swift-parser-primitives.git",
+            url: "https://github.com/swift-molecules/swift-parser.git",
             branch: "main"
         ),
     ],
@@ -45,17 +45,17 @@ let package = Package(
         .target(
             name: "RFC 2822",
             dependencies: [
-                .product(name: "Binary Primitives", package: "swift-binary-primitives"),
+                .product(name: "Binary", package: "swift-binary"),
                 .product(
-                    name: "ASCII Serializer Primitives",
-                    package: "swift-ascii-serializer-primitives"
+                    name: "ASCII Serializer",
+                    package: "swift-ascii-serializer"
                 ),
                 .product(
-                    name: "Parseable ASCII Primitives",
-                    package: "swift-ascii-parser-primitives"
+                    name: "Parseable ASCII",
+                    package: "swift-ascii-parser"
                 ),
                 .product(name: "INCITS 4 1986", package: "swift-incits-4-1986"),
-                .product(name: "Parser Primitives", package: "swift-parser-primitives"),
+                .product(name: "Parser", package: "swift-parser"),
             ]
         ),
         .target(

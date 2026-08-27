@@ -1,4 +1,4 @@
-import ASCII_Serializer_Primitives
+import ASCII_Serializer
 import INCITS_4_1986
 
 public enum RFC_2822 {}

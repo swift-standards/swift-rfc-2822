@@ -1,4 +1,4 @@
-public import Binary_Serializable_Primitives
+public import Binary_Serializable
 
 extension RFC_2822.Message {
 
